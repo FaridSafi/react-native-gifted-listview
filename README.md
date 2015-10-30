@@ -1,6 +1,6 @@
 # react-native-gifted-listview
 
-A ListView that embed some recurrents features like pull-to-refresh, infinite scrolling (using touch), loader, default view for Android and iOS React-Native apps
+A ListView that embed some recurrents features like pull-to-refresh, infinite scrolling and more for Android and iOS React-Native apps
 
 
 ![](https://raw.githubusercontent.com/FaridSafi/react-native-gifted-listview/master/Captures/ios_refresh_page_demo.gif)
@@ -117,7 +117,8 @@ var styles = {
 - [x] Infinite scrolling using touch to load more
 - [x] Loader for first display
 - [x] Default view when no content to display
-- [] Pull-to-refresh in Android (tried to implement it but it seems that onResponderRelease event is not yet catchable in Android ListView - React-Native 0.13.2)
+- [ ] Pull-to-refresh in Android (tried to implement it but it seems that onResponderRelease event is not yet catchable in Android ListView - React-Native 0.13.2)
+
 
 
 ### License
