@@ -9,6 +9,6 @@ var {
   AppRegistry
 } = React;
 
-var Example = require('./example.js');
+var Example = require('./example_advanced.js');
 
 AppRegistry.registerComponent('Example', () => Example);

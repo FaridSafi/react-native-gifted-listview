@@ -1,0 +1,32 @@
+{
+  "name": "react-native-gifted-listview",
+  "version": "0.0.1",
+  "description": "",
+  "main": "GiftedListView.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/FaridSafi/react-native-gifted-listview.git"
+  },
+  "keywords": [
+    "pull-to-refresh",
+    "refreshable",
+    "listview",
+    "infinite-scrolling",
+    "react-component",
+    "react-native",
+    "ios",
+    "android"
+  ],
+  "author": "Farid from Safi",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/FaridSafi/react-native-gifted-listview/issues"
+  },
+  "homepage": "https://github.com/FaridSafi/react-native-gifted-listview#readme",
+  "dependencies": {
+    "react-native-gifted-spinner": "^0.0.3"
+  }
+}
