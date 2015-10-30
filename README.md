@@ -117,6 +117,7 @@ var styles = {
 - [x] Infinite scrolling using touch to load more
 - [x] Loader for first display
 - [x] Default view when no content to display
+- [x] Customizable (see advanced example)
 - [ ] Pull-to-refresh in Android (tried to implement it but it seems that onResponderRelease event is not catchable yet in Android ListView - React-Native 0.13.2)
 
 
