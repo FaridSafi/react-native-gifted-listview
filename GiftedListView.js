@@ -307,7 +307,6 @@ var GiftedListView = React.createClass({
         
         onScroll={this.props.refreshable === true ? this._onScroll : null}
         onResponderRelease={this.props.refreshable === true ? this._onResponderRelease : null}
-        onResponderGrant={this._grant}
 
         scrollEventThrottle={200}
         

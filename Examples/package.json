@@ -8,6 +8,6 @@
   "dependencies": {
     "react-native": "^0.13.2",
     "react-native-gifted-listview": "*",
-    "react-native-gifted-spinner": "0.0.3"
+    "react-native-gifted-spinner": "^0.0.3"
   }
 }
