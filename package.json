@@ -1,7 +1,7 @@
 {
   "name": "react-native-gifted-listview",
   "version": "0.0.1",
-  "description": "",
+  "description": "A ListView that embed some recurrents features like pull-to-refresh, infinite scrolling and more for Android and iOS React-Native apps",
   "main": "GiftedListView.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
