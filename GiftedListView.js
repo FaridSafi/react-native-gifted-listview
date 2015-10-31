@@ -70,7 +70,7 @@ var GiftedListView = React.createClass({
       refreshable: true,
       refreshableViewHeight: 50,
       refreshableDistance: 40,
-      onFetch(page, callback) { callback([]); },
+      onFetch(page, callback, options) { callback([]); },
       
       paginationFetchigView() {
         return (
@@ -241,7 +241,7 @@ var GiftedListView = React.createClass({
     this.setState({
       paginationStatus: 'fetching',
     });
-    this.props.onFetch(this._getPage() + 1, this._postPaginate);
+    this.props.onFetch(this._getPage() + 1, this._postPaginate, {});
   },
   
   _postPaginate(rows = [], options = {}) {
