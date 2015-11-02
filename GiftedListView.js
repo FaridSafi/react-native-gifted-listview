@@ -162,7 +162,7 @@ var GiftedListView = React.createClass({
       return r1 !== r2;
     }});
     
-    if (this.props.refreshable === true) {
+    if (this.props.refreshable === true && Platform.OS !== 'android') {
       this._setY(this.props.refreshableViewHeight);
     } else {
       this._setY(0);

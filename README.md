@@ -16,8 +16,7 @@ var {
   StyleSheet,
   Text,
   View,
-  TouchableHighlight,
-  Platform
+  TouchableHighlight
 } = React;
 
 var GiftedListView = require('react-native-gifted-listview');
