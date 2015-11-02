@@ -21,8 +21,9 @@ var Example = React.createClass({
    * Should be replaced by your own logic
    * @param {number} page Requested page to fetch
    * @param {function} callback Should pass the rows
+   * @param {object} options Inform if first load
    */
-  _onFetch(page = 1, callback) {
+  _onFetch(page = 1, callback, options) {
     setTimeout(() => {
       var rows = ['row '+((page - 1) * 3 + 1), 'row '+((page - 1) * 3 + 2), 'row '+((page - 1) * 3 + 3)];
       if (page === 3) {
@@ -70,6 +71,7 @@ var Example = React.createClass({
           firstLoader={true} // display a loader for the first fetching
           pagination={true} // enable infinite scrolling using touch to load more
           refreshable={true} // enable pull-to-refresh for iOS and touch-to-refresh for Android
+          withSections={false} // enable sections
         />
       </View>
     );
