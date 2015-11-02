@@ -23,10 +23,13 @@ var Example = React.createClass({
    * Should be replaced by your own logic
    * @param {number} page Requested page to fetch
    * @param {function} callback Should pass the rows
+   * @param {object} options Inform if first load
    */
-  _onFetch(page = 1, callback) {
+  _onFetch(page = 1, callback, options) {
     setTimeout(() => {
-      var rows = ['row '+((page - 1) * 3 + 1), 'row '+((page - 1) * 3 + 2), 'row '+((page - 1) * 3 + 3)];
+      var header = 'Header '+page;
+      var rows = {};
+      rows[header] = ['row '+((page - 1) * 3 + 1), 'row '+((page - 1) * 3 + 2), 'row '+((page - 1) * 3 + 3)];
       if (page === 3) {
         callback(rows, {
           allLoaded: true, // the end of the list is reached
@@ -59,6 +62,20 @@ var Example = React.createClass({
       >  
         <Text>{rowData}</Text>
       </TouchableHighlight>
+    );
+  },
+
+  /**
+   * Render a row
+   * @param {object} rowData Row data
+   */
+  _renderSectionHeaderView(sectionData, sectionID) {
+    return (
+      <View style={customStyles.header}>
+        <Text>
+          {sectionID}
+        </Text>
+      </View>
     );
   },
   
@@ -217,6 +234,9 @@ var Example = React.createClass({
           emptyView={this._renderEmptyView}
           
           renderSeparator={this._renderSeparatorView}
+          
+          withSections={true} // enable sections
+          sectionHeaderView={this._renderSectionHeaderView}
         />
       </View>
     );
@@ -258,6 +278,10 @@ var customStyles = {
     padding: 10,
     height: 44,
   },
+  header: {
+    backgroundColor: '#EEE',
+    padding: 10,
+  }
 };
 
 var screenStyles = {

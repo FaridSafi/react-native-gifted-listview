@@ -10,6 +10,22 @@ var {
   Text
 } = React;
 
+// small helper function which merged two objects into one
+function MergeRecursive(obj1, obj2) {
+  for (var p in obj2) {
+    try {
+      if ( obj2[p].constructor==Object ) {
+        obj1[p] = MergeRecursive(obj1[p], obj2[p]);
+      } else {
+        obj1[p] = obj2[p];
+      }
+    } catch(e) {
+      obj1[p] = obj2[p];
+    }
+  }
+  return obj1;
+}
+
 var GiftedSpinner = require('react-native-gifted-spinner');
 
 var GiftedListView = React.createClass({
@@ -54,7 +70,9 @@ var GiftedListView = React.createClass({
       refreshable: true,
       refreshableViewHeight: 50,
       refreshableDistance: 40,
-      onFetch(page, callback) { callback([]); },
+      sectionHeaderView: null,
+      withSections: false,
+      onFetch(page, callback, options) { callback([]); },
       
       paginationFetchigView() {
         return (
@@ -157,11 +175,9 @@ var GiftedListView = React.createClass({
   _setRows(rows) { this._rows = rows; },
   _getRows() { return this._rows; },
   
+  
   getInitialState() {
-    var ds = new ListView.DataSource({rowHasChanged: (r1, r2) => {
-      return r1 !== r2;
-    }});
-    
+
     if (this.props.refreshable === true && Platform.OS !== 'android') {
       this._setY(this.props.refreshableViewHeight);
     } else {
@@ -170,26 +186,50 @@ var GiftedListView = React.createClass({
 
     this._setPage(1);
     this._setRows([]);
-    
-    return {
-      dataSource: ds.cloneWithRows(this._getRows()),
-      refreshStatus: 'waiting',
-      paginationStatus: 'firstLoad',
-    };
+
+    var ds = null;
+    if (this.props.withSections === true) {
+      ds = new ListView.DataSource({
+        rowHasChanged: (row1, row2) => row1 !== row2,
+        sectionHeaderHasChanged: (section1, section2) => section1 !== section2,
+      });
+      return {
+        dataSource: ds.cloneWithRowsAndSections(this._getRows()),
+        refreshStatus: 'waiting',
+        paginationStatus: 'firstLoad',
+      };
+    } else {
+      ds = new ListView.DataSource({
+        rowHasChanged: (row1, row2) => row1 !== row2,
+      });   
+      return {
+        dataSource: ds.cloneWithRows(this._getRows()),
+        refreshStatus: 'waiting',
+        paginationStatus: 'firstLoad',
+      };   
+    }
   },
 
   componentDidMount() {
     this._scrollResponder = this.refs.listview.getScrollResponder();
-    this.props.onFetch(this._getPage(), this._postRefresh);
+    this.props.onFetch(this._getPage(), this._postRefresh, {firstLoad: true});
+  },
+
+  setNativeProps(props) {
+    this.refs.listview.setNativeProps(props);
+  },
+
+  _refresh() {
+    this._onRefresh({external: true});
   },
   
-  _onRefresh() {
+  _onRefresh(options = {}) {
     this._scrollResponder.scrollTo(0);
     this.setState({
       refreshStatus: 'fetching',
     });
     this._setPage(1);
-    this.props.onFetch(this._getPage(), this._postRefresh);
+    this.props.onFetch(this._getPage(), this._postRefresh, options);
   },
   
   _postRefresh(rows = [], options = {}) {
@@ -205,22 +245,35 @@ var GiftedListView = React.createClass({
     this.setState({
       paginationStatus: 'fetching',
     });
-    this.props.onFetch(this._getPage() + 1, this._postPaginate);
+    this.props.onFetch(this._getPage() + 1, this._postPaginate, {});
   },
   
   _postPaginate(rows = [], options = {}) {
     this._setPage(this._getPage() + 1);
-    var concatenatedRows = this._getRows().concat(rows);
-    this._updateRows(concatenatedRows, options);
+    var mergedRows = null;
+    if (this.props.withSections === true) {
+      mergedRows = MergeRecursive(this._getRows(), rows);
+    } else {
+      mergedRows = this._getRows().concat(rows);
+    }
+    this._updateRows(mergedRows, options);
   },
   
   _updateRows(rows = [], options = {}) {
     this._setRows(rows);
-    this.setState({
-      dataSource: this.state.dataSource.cloneWithRows(rows),
-      refreshStatus: 'waiting',
-      paginationStatus: (options.allLoaded === true ? 'allLoaded' : 'waiting'),
-    });
+    if (this.props.withSections === true) {
+      this.setState({
+        dataSource: this.state.dataSource.cloneWithRowsAndSections(rows),
+        refreshStatus: 'waiting',
+        paginationStatus: (options.allLoaded === true ? 'allLoaded' : 'waiting'),
+      });
+    } else {
+      this.setState({
+        dataSource: this.state.dataSource.cloneWithRows(rows),
+        refreshStatus: 'waiting',
+        paginationStatus: (options.allLoaded === true ? 'allLoaded' : 'waiting'),
+      });    
+    }
   },
   
   _onResponderRelease() {
@@ -264,9 +317,9 @@ var GiftedListView = React.createClass({
   },
   
   _renderPaginationView() {
-    if ((this.state.paginationStatus === 'fetching' && this.props.pagination === true) || this.state.paginationStatus === 'firstLoad' && this.props.firstLoader === true) {
+    if ((this.state.paginationStatus === 'fetching' && this.props.pagination === true) || (this.state.paginationStatus === 'firstLoad' && this.props.firstLoader === true)) {
       return this.props.paginationFetchigView();
-    } else if (this.state.paginationStatus === 'waiting' && this.props.pagination === true && this._getRows().length > 0) {
+    } else if (this.state.paginationStatus === 'waiting' && this.props.pagination === true && (this.props.withSections === true || this._getRows().length > 0)) {
       return this.props.paginationWaitingView(this._onPaginate);
     } else if (this.state.paginationStatus === 'allLoaded' && this.props.pagination === true) {
       return this.props.paginationAllLoadedView();
@@ -299,6 +352,7 @@ var GiftedListView = React.createClass({
         ref="listview"
         dataSource={this.state.dataSource}
         renderRow={this.props.rowView}
+        renderSectionHeader={this.props.sectionHeaderView}
         initialListSize={this.props.initialListSize}
         renderSeparator={this.props.renderSeparator}
 
