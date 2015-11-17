@@ -65,6 +65,7 @@ var GiftedListView = React.createClass({
 
     return {
       initialListSize: 10,
+      pageSize: 1,
       firstLoader: true,
       pagination: true,
       refreshable: true,
@@ -354,6 +355,7 @@ var GiftedListView = React.createClass({
         renderRow={this.props.rowView}
         renderSectionHeader={this.props.sectionHeaderView}
         initialListSize={this.props.initialListSize}
+        pageSize={this.props.pageSize}
         renderSeparator={this.props.renderSeparator}
 
         renderHeader={this.props.refreshable === true ? this._renderRefreshView : null}
