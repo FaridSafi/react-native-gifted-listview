@@ -10,6 +10,7 @@ var {
   Text
 } = React;
 
+
 // small helper function which merged two objects into one
 function MergeRecursive(obj1, obj2) {
   for (var p in obj2) {
@@ -31,39 +32,8 @@ var GiftedSpinner = require('react-native-gifted-spinner');
 var GiftedListView = React.createClass({
   
   getDefaultProps() {
-    var customStyles = {
-      separator: {
-        height: 1,
-        backgroundColor: '#CCC'
-      },
-      refreshableView: {
-        height: 50,
-        backgroundColor: '#DDD',
-        justifyContent: 'center',
-        alignItems: 'center',
-      },
-      actionsLabel: {
-        fontSize: 20,
-      },
-      paginationView: {
-        height: 44,
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: '#FFF',
-      },
-      defaultView: {
-        justifyContent: 'center',
-        alignItems: 'center',
-        padding: 20,
-      },
-      defaultViewTitle: {
-        fontSize: 16,
-        fontWeight: 'bold',
-        marginBottom: 15,
-      },
-    };
-
     return {
+      customStyles: {},
       initialListSize: 10,
       firstLoader: true,
       pagination: true,
@@ -74,98 +44,37 @@ var GiftedListView = React.createClass({
       withSections: false,
       onFetch(page, callback, options) { callback([]); },
       
-      paginationFetchigView() {
-        return (
-          <View style={customStyles.paginationView}>
-            <GiftedSpinner />
-          </View>
-        );
-      },
-      paginationAllLoadedView() {
-        return (
-          <View style={customStyles.paginationView}>
-            <Text style={customStyles.actionsLabel}>
-              ~
-            </Text>
-          </View>
-        );
-      },
-      paginationWaitingView(paginateCallback) {
-        return (
-          <TouchableHighlight 
-            underlayColor='#c8c7cc'
-            onPress={paginateCallback}
-            style={customStyles.paginationView}
-          >
-            <Text style={customStyles.actionsLabel}>
-              +
-            </Text>
-          </TouchableHighlight>
-        );
-      },
-      refreshableFetchingView() {
-        return (
-          <View style={customStyles.refreshableView}>
-            <GiftedSpinner />
-          </View>
-        );
-      },
-      refreshableWillRefreshView() {
-        return (
-          <View style={customStyles.refreshableView}>
-            <Text style={customStyles.actionsLabel}>
-              ↻
-            </Text>
-          </View>
-        );
-      },
-      refreshableWaitingView(refreshCallback) {
-        if (Platform.OS !== 'android') {
-          return (
-            <View style={customStyles.refreshableView}>
-              <Text style={customStyles.actionsLabel}>
-                ↓
-              </Text>
-            </View>
-          );
-        } else {
-          return (
-            <TouchableHighlight 
-              underlayColor='#c8c7cc'
-              onPress={refreshCallback}
-              style={customStyles.refreshableView}
-            >
-              <Text style={customStyles.actionsLabel}>
-                ↻
-              </Text>
-            </TouchableHighlight>
-          );
-        }
-      },
-      emptyView(refreshCallback) {
-        return (
-          <View style={customStyles.defaultView}>
-            <Text style={customStyles.defaultViewTitle}>
-              Sorry, there is no content to display
-            </Text>
-        
-            <TouchableHighlight 
-              underlayColor='#c8c7cc'
-              onPress={refreshCallback}
-            >
-              <Text>
-                ↻
-              </Text>
-            </TouchableHighlight>
-          </View>
-        );
-      },
-      renderSeparator() {
-        return (
-          <View style={customStyles.separator} />
-        );
-      },
+      paginationFetchigView: null,
+      paginationAllLoadedView: null,
+      paginationWaitingView: null,
+      refreshableFetchingView: null,
+      refreshableWillRefreshView: null,
+      refreshableWaitingView: null,
+      emptyView: null,
+      renderSeparator: null,
     };
+  },
+  
+  propTypes: {
+    customStyles: React.PropTypes.object,
+    initialListSize: React.PropTypes.number,
+    firstLoader: React.PropTypes.bool,
+    pagination: React.PropTypes.bool,
+    refreshable: React.PropTypes.bool,
+    refreshableViewHeight: React.PropTypes.number,
+    refreshableDistance: React.PropTypes.number,
+    sectionHeaderView: React.PropTypes.func,
+    withSections: React.PropTypes.bool,
+    onFetch: React.PropTypes.func,
+    
+    paginationFetchigView: React.PropTypes.func,
+    paginationAllLoadedView: React.PropTypes.func,
+    paginationWaitingView: React.PropTypes.func,
+    refreshableFetchingView: React.PropTypes.func,
+    refreshableWillRefreshView: React.PropTypes.func,
+    refreshableWaitingView: React.PropTypes.func,
+    emptyView: React.PropTypes.func,
+    renderSeparator: React.PropTypes.func,
   },
   
   _setY(y) { this._y = y; },
@@ -175,6 +84,130 @@ var GiftedListView = React.createClass({
   _setRows(rows) { this._rows = rows; },
   _getRows() { return this._rows; },
   
+  
+  paginationFetchigView() {
+    if (this.props.paginationFetchigView) {
+      return this.props.paginationFetchigView();
+    }
+    
+    return (
+      <View style={[this.defaultStyles.paginationView, this.props.customStyles.paginationView]}>
+        <GiftedSpinner />
+      </View>
+    );
+  },
+  paginationAllLoadedView() {
+    if (this.props.paginationAllLoadedView) {
+      return this.props.paginationAllLoadedView();
+    }
+    
+    return (
+      <View style={[this.defaultStyles.paginationView, this.props.customStyles.paginationView]}>
+        <Text style={[this.defaultStyles.actionsLabel, this.props.customStyles.actionsLabel]}>
+          ~
+        </Text>
+      </View>
+    );
+  },
+  paginationWaitingView(paginateCallback) {
+    if (this.props.paginationWaitingView) {
+      return this.props.paginationWaitingView(paginateCallback);
+    }
+    
+    return (
+      <TouchableHighlight 
+        underlayColor='#c8c7cc'
+        onPress={paginateCallback}
+        style={[this.defaultStyles.paginationView, this.props.customStyles.paginationView]}
+      >
+        <Text style={[this.defaultStyles.actionsLabel, this.props.customStyles.actionsLabel]}>
+          +
+        </Text>
+      </TouchableHighlight>
+    );
+  },
+  refreshableFetchingView() {
+    if (this.props.refreshableFetchingView) {
+      return this.props.refreshableFetchingView();
+    }
+    
+    return (
+      <View style={[this.defaultStyles.refreshableView, this.props.customStyles.refreshableView]}>
+        <GiftedSpinner />
+      </View>
+    );
+  },
+  refreshableWillRefreshView() {
+    if (this.props.refreshableWillRefreshView) {
+      return this.props.refreshableWillRefreshView();
+    }
+    
+    return (
+      <View style={[this.defaultStyles.refreshableView, this.props.customStyles.refreshableView]}>
+        <Text style={[this.defaultStyles.actionsLabel, this.props.customStyles.actionsLabel]}>
+          ↻
+        </Text>
+      </View>
+    );
+  },
+  refreshableWaitingView(refreshCallback) {
+    if (this.props.refreshableWaitingView) {
+      return this.props.refreshableWaitingView(refreshCallback);
+    }
+    
+    if (Platform.OS !== 'android') {
+      return (
+        <View style={[this.defaultStyles.refreshableView, this.props.customStyles.refreshableView]}>
+          <Text style={[this.defaultStyles.actionsLabel, this.props.customStyles.actionsLabel]}>
+            ↓
+          </Text>
+        </View>
+      );
+    } else {
+      return (
+        <TouchableHighlight 
+          underlayColor='#c8c7cc'
+          onPress={refreshCallback}
+          style={[this.defaultStyles.refreshableView, this.props.customStyles.refreshableView]}
+        >
+          <Text style={[this.defaultStyles.actionsLabel, this.props.customStyles.actionsLabel]}>
+            ↻
+          </Text>
+        </TouchableHighlight>
+      );
+    }
+  },
+  emptyView(refreshCallback) {
+    if (this.props.emptyView) {
+      return this.props.emptyView(refreshCallback);
+    }
+    
+    return (
+      <View style={[this.defaultStyles.defaultView, this.props.customStyles.defaultView]}>
+        <Text style={[this.defaultStyles.defaultViewTitle, this.props.customStyles.defaultViewTitle]}>
+          Sorry, there is no content to display
+        </Text>
+    
+        <TouchableHighlight 
+          underlayColor='#c8c7cc'
+          onPress={refreshCallback}
+        >
+          <Text>
+            ↻
+          </Text>
+        </TouchableHighlight>
+      </View>
+    );
+  },
+  renderSeparator() {
+    if (this.props.renderSeparator) {
+      return this.props.renderSeparator();
+    }
+    
+    return (
+      <View style={[this.defaultStyles.separator, this.props.customStyles.separator]} />
+    );
+  },
   
   getInitialState() {
 
@@ -306,25 +339,25 @@ var GiftedListView = React.createClass({
   _renderRefreshView() {
     switch (this.state.refreshStatus) {
       case 'fetching':
-        return this.props.refreshableFetchingView();
+        return this.refreshableFetchingView();
         break;
       case 'willRefresh':
-        return this.props.refreshableWillRefreshView();
+        return this.refreshableWillRefreshView();
         break;
       default:
-        return this.props.refreshableWaitingView(this._onRefresh);
+        return this.refreshableWaitingView(this._onRefresh);
     }
   },
   
   _renderPaginationView() {
     if ((this.state.paginationStatus === 'fetching' && this.props.pagination === true) || (this.state.paginationStatus === 'firstLoad' && this.props.firstLoader === true)) {
-      return this.props.paginationFetchigView();
+      return this.paginationFetchigView();
     } else if (this.state.paginationStatus === 'waiting' && this.props.pagination === true && (this.props.withSections === true || this._getRows().length > 0)) {
-      return this.props.paginationWaitingView(this._onPaginate);
+      return this.paginationWaitingView(this._onPaginate);
     } else if (this.state.paginationStatus === 'allLoaded' && this.props.pagination === true) {
-      return this.props.paginationAllLoadedView();
+      return this.paginationAllLoadedView();
     } else if (this._getRows().length === 0) {
-      return this.props.emptyView(this._onRefresh);
+      return this.emptyView(this._onRefresh);
     } else {
       return null;
     }
@@ -370,9 +403,43 @@ var GiftedListView = React.createClass({
         scrollEnabled={true}
         canCancelContentTouches={true}
         
+        renderSeparator={this.renderSeparator}
+        
         {...this.props}
       />
     );
+  },
+  
+  defaultStyles: {
+    separator: {
+      height: 1,
+      backgroundColor: '#CCC'
+    },
+    refreshableView: {
+      height: 50,
+      backgroundColor: '#DDD',
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    actionsLabel: {
+      fontSize: 20,
+    },
+    paginationView: {
+      height: 44,
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: '#FFF',
+    },
+    defaultView: {
+      justifyContent: 'center',
+      alignItems: 'center',
+      padding: 20,
+    },
+    defaultViewTitle: {
+      fontSize: 16,
+      fontWeight: 'bold',
+      marginBottom: 15,
+    },
   },
 });
 
