@@ -79,6 +79,11 @@ var Example = React.createClass({
           pagination={true} // enable infinite scrolling using touch to load more
           refreshable={true} // enable pull-to-refresh for iOS and touch-to-refresh for Android
           withSections={false} // enable sections
+          customStyles={{
+            refreshableView: {
+              backgroundColor: '#eee',
+            },
+          }}
         />
       </View>
     );
