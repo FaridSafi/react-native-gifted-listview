@@ -40,6 +40,7 @@ var GiftedListView = React.createClass({
       refreshable: true,
       refreshableViewHeight: 50,
       refreshableDistance: 40,
+      headerView: null,
       sectionHeaderView: null,
       withSections: false,
       onFetch(page, callback, options) { callback([]); },
@@ -63,6 +64,7 @@ var GiftedListView = React.createClass({
     refreshable: React.PropTypes.bool,
     refreshableViewHeight: React.PropTypes.number,
     refreshableDistance: React.PropTypes.number,
+    headerView: React.PropTypes.func,
     sectionHeaderView: React.PropTypes.func,
     withSections: React.PropTypes.bool,
     onFetch: React.PropTypes.func,
@@ -126,14 +128,23 @@ var GiftedListView = React.createClass({
       </TouchableHighlight>
     );
   },
+  headerView() {
+    if(this.state.paginationStatus==='firstLoad' || !this.props.headerView){
+      return(<View />);
+    }
+    return this.props.headerView();
+  },
   refreshableFetchingView() {
     if (this.props.refreshableFetchingView) {
       return this.props.refreshableFetchingView();
     }
     
     return (
-      <View style={[this.defaultStyles.refreshableView, this.props.customStyles.refreshableView]}>
-        <GiftedSpinner />
+      <View>
+        <View style={[this.defaultStyles.refreshableView, this.props.customStyles.refreshableView]}>
+          <GiftedSpinner />
+        </View>
+        {this.headerView()}
       </View>
     );
   },
@@ -143,10 +154,13 @@ var GiftedListView = React.createClass({
     }
     
     return (
-      <View style={[this.defaultStyles.refreshableView, this.props.customStyles.refreshableView]}>
-        <Text style={[this.defaultStyles.actionsLabel, this.props.customStyles.actionsLabel]}>
-          ↻
-        </Text>
+      <View>
+        <View style={[this.defaultStyles.refreshableView, this.props.customStyles.refreshableView]}>
+          <Text style={[this.defaultStyles.actionsLabel, this.props.customStyles.actionsLabel]}>
+            ↻
+          </Text>
+        </View>
+        {this.headerView()}
       </View>
     );
   },
@@ -157,10 +171,13 @@ var GiftedListView = React.createClass({
     
     if (Platform.OS !== 'android') {
       return (
-        <View style={[this.defaultStyles.refreshableView, this.props.customStyles.refreshableView]}>
-          <Text style={[this.defaultStyles.actionsLabel, this.props.customStyles.actionsLabel]}>
-            ↓
-          </Text>
+        <View>
+            <View style={[this.defaultStyles.refreshableView, this.props.customStyles.refreshableView]}>
+              <Text style={[this.defaultStyles.actionsLabel, this.props.customStyles.actionsLabel]}>
+                ↓
+              </Text>
+            </View>
+          {this.headerView()}
         </View>
       );
     } else {
