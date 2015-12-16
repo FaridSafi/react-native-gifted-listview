@@ -129,8 +129,8 @@ var GiftedListView = React.createClass({
     );
   },
   headerView() {
-    if(this.state.paginationStatus==='firstLoad' || !this.props.headerView){
-      return(<View />);
+    if (this.state.paginationStatus === 'firstLoad' || !this.props.headerView){
+      return null;
     }
     return this.props.headerView();
   },
