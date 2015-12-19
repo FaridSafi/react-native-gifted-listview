@@ -405,7 +405,7 @@ var GiftedListView = React.createClass({
         renderSectionHeader={this.props.sectionHeaderView}
 
 
-        renderHeader={this.props.refreshable === true ? this._renderRefreshView : null}
+        renderHeader={this.props.refreshable === true ? this._renderRefreshView : this.headerView}
         renderFooter={this._renderPaginationView}
         
         onScroll={this.props.refreshable === true ? this._onScroll : null}
