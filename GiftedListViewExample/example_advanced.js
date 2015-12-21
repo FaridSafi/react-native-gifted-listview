@@ -210,7 +210,9 @@ var Example = React.createClass({
   render() {
     return (
       <View style={screenStyles.container}>
-        <View style={screenStyles.navBar} />
+        <View style={screenStyles.navBar}>
+          <Text style={screenStyles.navBarTitle}>Gifted ListView</Text>
+        </View>
         <GiftedListView
           rowView={this._renderRowView}
           
@@ -300,8 +302,16 @@ var screenStyles = {
   },
   navBar: {
     height: 64,
-    backgroundColor: '#007aff'
+    backgroundColor: '#007aff',
+
+    justifyContent: 'center',
+    alignItems: 'center',
   },
+  navBarTitle: {
+    color: '#fff',
+    fontSize: 16,
+    marginTop: 12,
+  }
 };
 
 module.exports = Example;
