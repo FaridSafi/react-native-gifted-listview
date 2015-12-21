@@ -404,8 +404,8 @@ var GiftedListView = React.createClass({
         renderHeader={this.props.refreshable === true && Platform.OS !== 'android' ? this._renderRefreshView : this.headerView}
         renderFooter={this._renderPaginationView}
         
-        onScroll={this.props.refreshable === true ? this._onScroll : null}
-        onResponderRelease={this.props.refreshable === true ? this._onResponderRelease : null}
+        onScroll={this.props.refreshable === true && Platform.OS !== 'android' ? this._onScroll : null}
+        onResponderRelease={this.props.refreshable === true && Platform.OS !== 'android' ? this._onResponderRelease : null}
 
         scrollEventThrottle={200}
         
@@ -433,6 +433,8 @@ var GiftedListView = React.createClass({
           onRefresh={this._onRefresh}
 
           {...this.props.PullToRefreshViewAndroidProps}
+          
+          style={[this.props.PullToRefreshViewAndroidProps.style, {flex: 1}]}
         >
           {this.renderListView({flex: 1})}
         </PullToRefreshViewAndroid>
