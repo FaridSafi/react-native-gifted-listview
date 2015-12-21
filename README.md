@@ -84,6 +84,11 @@ var Example = React.createClass({
               backgroundColor: '#eee',
             },
           }}
+          
+          PullToRefreshViewAndroidProps={{
+            colors: ['#ff0000', '#00ff00', '#0000ff'],
+            progressBackgroundColor: '#c8c7cc',
+          }}
         />
       </View>
     );
@@ -125,7 +130,7 @@ var styles = {
 - [x] Default view when no content to display
 - [x] Customizable (see advanced example)
 - [x] Support for section header
-- [ ] Pull-to-refresh in Android (tried to implement it but it seems that onResponderRelease event is not catchable yet in Android ListView - React-Native 0.13.2)
+- [x] Pull-to-refresh in Android
 
 
 

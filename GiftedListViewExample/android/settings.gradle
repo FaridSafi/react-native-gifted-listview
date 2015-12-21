@@ -1,0 +1,3 @@
+rootProject.name = 'GiftedListViewExample'
+
+include ':app'
