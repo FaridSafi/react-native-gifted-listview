@@ -1,4 +1,4 @@
-# Gifted Listview
+# Gifted ListView
 
 A ListView with pull-to-refresh, infinite scrolling and more for Android and iOS React-Native apps
 
