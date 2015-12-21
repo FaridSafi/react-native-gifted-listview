@@ -1,6 +1,6 @@
-# react-native-gifted-listview
+# Gifted Listview
 
-A ListView that embed some recurrents features like pull-to-refresh, infinite scrolling and more for Android and iOS React-Native apps
+A ListView with pull-to-refresh, infinite scrolling and more for Android and iOS React-Native apps
 
 
 ![](https://raw.githubusercontent.com/FaridSafi/react-native-gifted-listview/master/Captures/ios_refresh_page_demo.gif)
