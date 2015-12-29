@@ -44,6 +44,7 @@ var GiftedListView = React.createClass({
       headerView: null,
       sectionHeaderView: null,
       withSections: false,
+      autoPaginate: false,
       onFetch(page, callback, options) { callback([]); },
 
       paginationFetchigView: null,
@@ -72,6 +73,7 @@ var GiftedListView = React.createClass({
     headerView: React.PropTypes.func,
     sectionHeaderView: React.PropTypes.func,
     withSections: React.PropTypes.bool,
+    autoPaginate: React.PropTypes.bool,
     onFetch: React.PropTypes.func,
 
     paginationFetchigView: React.PropTypes.func,
@@ -216,6 +218,14 @@ var GiftedListView = React.createClass({
       <View style={[this.defaultStyles.separator, this.props.customStyles.separator]} />
     );
   },
+  onEndReached() {
+    if (this.props.autoPaginate) {
+      this._onPaginate();
+    }
+    if (this.props.onEndReached) {
+      this.props.onEndReached();
+    }
+  },
 
   getInitialState() {
 
@@ -286,10 +296,13 @@ var GiftedListView = React.createClass({
   },
 
   _onPaginate() {
-    this.setState({
-      paginationStatus: 'fetching',
-    });
-    this.props.onFetch(this._getPage() + 1, this._postPaginate, {});
+    if (this.state.paginationStatus === 'firstLoad'
+    || this.state.paginationStatus === 'waiting') {
+      this.setState({
+        paginationStatus: 'fetching',
+      });
+      this.props.onFetch(this._getPage() + 1, this._postPaginate, {});
+    }
   },
 
   _postPaginate(rows = [], options = {}) {
@@ -417,6 +430,8 @@ var GiftedListView = React.createClass({
         canCancelContentTouches={true}
 
         renderSeparator={this.renderSeparator}
+
+        onEndReached={this.onEndReached}
 
         {...this.props}
 
