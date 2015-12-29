@@ -31,7 +31,7 @@ function MergeRecursive(obj1, obj2) {
 var GiftedSpinner = require('react-native-gifted-spinner');
 
 var GiftedListView = React.createClass({
-  
+
   getDefaultProps() {
     return {
       customStyles: {},
@@ -45,7 +45,7 @@ var GiftedListView = React.createClass({
       sectionHeaderView: null,
       withSections: false,
       onFetch(page, callback, options) { callback([]); },
-      
+
       paginationFetchigView: null,
       paginationAllLoadedView: null,
       paginationWaitingView: null,
@@ -60,7 +60,7 @@ var GiftedListView = React.createClass({
       },
     };
   },
-  
+
   propTypes: {
     customStyles: React.PropTypes.object,
     initialListSize: React.PropTypes.number,
@@ -73,7 +73,7 @@ var GiftedListView = React.createClass({
     sectionHeaderView: React.PropTypes.func,
     withSections: React.PropTypes.bool,
     onFetch: React.PropTypes.func,
-    
+
     paginationFetchigView: React.PropTypes.func,
     paginationAllLoadedView: React.PropTypes.func,
     paginationWaitingView: React.PropTypes.func,
@@ -84,20 +84,20 @@ var GiftedListView = React.createClass({
     renderSeparator: React.PropTypes.func,
     PullToRefreshViewAndroidProps: React.PropTypes.object,
   },
-  
+
   _setY(y) { this._y = y; },
   _getY(y) { return this._y; },
   _setPage(page) { this._page = page; },
   _getPage() { return this._page; },
   _setRows(rows) { this._rows = rows; },
   _getRows() { return this._rows; },
-  
-  
+
+
   paginationFetchigView() {
     if (this.props.paginationFetchigView) {
       return this.props.paginationFetchigView();
     }
-    
+
     return (
       <View style={[this.defaultStyles.paginationView, this.props.customStyles.paginationView]}>
         <GiftedSpinner />
@@ -108,7 +108,7 @@ var GiftedListView = React.createClass({
     if (this.props.paginationAllLoadedView) {
       return this.props.paginationAllLoadedView();
     }
-    
+
     return (
       <View style={[this.defaultStyles.paginationView, this.props.customStyles.paginationView]}>
         <Text style={[this.defaultStyles.actionsLabel, this.props.customStyles.actionsLabel]}>
@@ -121,9 +121,9 @@ var GiftedListView = React.createClass({
     if (this.props.paginationWaitingView) {
       return this.props.paginationWaitingView(paginateCallback);
     }
-    
+
     return (
-      <TouchableHighlight 
+      <TouchableHighlight
         underlayColor='#c8c7cc'
         onPress={paginateCallback}
         style={[this.defaultStyles.paginationView, this.props.customStyles.paginationView]}
@@ -157,7 +157,7 @@ var GiftedListView = React.createClass({
     if (this.props.refreshableWillRefreshView) {
       return this.props.refreshableWillRefreshView();
     }
-    
+
     return (
       <View>
         <View style={[this.defaultStyles.refreshableView, this.props.customStyles.refreshableView]}>
@@ -173,7 +173,7 @@ var GiftedListView = React.createClass({
     if (this.props.refreshableWaitingView) {
       return this.props.refreshableWaitingView(refreshCallback);
     }
-    
+
     return (
       <View>
           <View style={[this.defaultStyles.refreshableView, this.props.customStyles.refreshableView]}>
@@ -189,14 +189,14 @@ var GiftedListView = React.createClass({
     if (this.props.emptyView) {
       return this.props.emptyView(refreshCallback);
     }
-    
+
     return (
       <View style={[this.defaultStyles.defaultView, this.props.customStyles.defaultView]}>
         <Text style={[this.defaultStyles.defaultViewTitle, this.props.customStyles.defaultViewTitle]}>
           Sorry, there is no content to display
         </Text>
-    
-        <TouchableHighlight 
+
+        <TouchableHighlight
           underlayColor='#c8c7cc'
           onPress={refreshCallback}
         >
@@ -211,12 +211,12 @@ var GiftedListView = React.createClass({
     if (this.props.renderSeparator) {
       return this.props.renderSeparator();
     }
-    
+
     return (
       <View style={[this.defaultStyles.separator, this.props.customStyles.separator]} />
     );
   },
-  
+
   getInitialState() {
 
     if (this.props.refreshable === true && Platform.OS !== 'android') {
@@ -243,7 +243,7 @@ var GiftedListView = React.createClass({
     } else {
       ds = new ListView.DataSource({
         rowHasChanged: (row1, row2) => row1 !== row2,
-      });   
+      });
       return {
         dataSource: ds.cloneWithRows(this._getRows()),
         refreshStatus: 'waiting',
@@ -265,7 +265,7 @@ var GiftedListView = React.createClass({
   _refresh() {
     this._onRefresh({external: true});
   },
-  
+
   _onRefresh(options = {}) {
     this._scrollResponder.scrollTo(0);
     this.setState({
@@ -275,23 +275,23 @@ var GiftedListView = React.createClass({
     this._setPage(1);
     this.props.onFetch(this._getPage(), this._postRefresh, options);
   },
-  
+
   _postRefresh(rows = [], options = {}) {
     this._updateRows(rows, options);
-    if (this.props.refreshable === true) {
+    if (this.props.refreshable === true && Platform.OS !== 'android') {
       // @issue
       // if a scrolling is already in progress, this scroll will not be executed
-      this._scrollResponder.scrollTo(this.props.refreshableViewHeight);        
+      this._scrollResponder.scrollTo(this.props.refreshableViewHeight);
     }
   },
-  
+
   _onPaginate() {
     this.setState({
       paginationStatus: 'fetching',
     });
     this.props.onFetch(this._getPage() + 1, this._postPaginate, {});
   },
-  
+
   _postPaginate(rows = [], options = {}) {
     this._setPage(this._getPage() + 1);
     var mergedRows = null;
@@ -302,7 +302,7 @@ var GiftedListView = React.createClass({
     }
     this._updateRows(mergedRows, options);
   },
-  
+
   _updateRows(rows = [], options = {}) {
     this._setRows(rows);
     if (this.props.withSections === true) {
@@ -318,10 +318,10 @@ var GiftedListView = React.createClass({
         refreshStatus: 'waiting',
         isRefreshing: false,
         paginationStatus: (options.allLoaded === true ? 'allLoaded' : 'waiting'),
-      });    
+      });
     }
   },
-  
+
   _onResponderRelease() {
     if (this.props.refreshable === true) {
       if (Platform.OS !== 'android') {
@@ -331,12 +331,12 @@ var GiftedListView = React.createClass({
       }
     }
   },
-  
+
   _onScroll(e) {
     this._setY(e.nativeEvent.contentOffset.y);
     if (this.props.refreshable === true) {
       if (Platform.OS !== 'android') {
-        if (this._getY() < this.props.refreshableViewHeight - this.props.refreshableDistance 
+        if (this._getY() < this.props.refreshableViewHeight - this.props.refreshableDistance
         && this.state.refreshStatus === 'waiting'
         && this._scrollResponder.scrollResponderHandleScrollShouldSetResponder() === true
       ) {
@@ -348,7 +348,7 @@ var GiftedListView = React.createClass({
       }
     }
   },
-  
+
   _renderRefreshView() {
     switch (this.state.refreshStatus) {
       case 'fetching':
@@ -361,7 +361,7 @@ var GiftedListView = React.createClass({
         return this.refreshableWaitingView(this._onRefresh);
     }
   },
-  
+
   _renderPaginationView() {
     if ((this.state.paginationStatus === 'fetching' && this.props.pagination === true) || (this.state.paginationStatus === 'firstLoad' && this.props.firstLoader === true)) {
       return this.paginationFetchigView();
@@ -383,7 +383,7 @@ var GiftedListView = React.createClass({
       return {top: 0, bottom: 0, left: 0, right: 0};
     }
   },
-  
+
   _calculateContentOffset() {
     if (this.props.refreshable === true && Platform.OS !== 'android') {
       return {x: 0, y: this.props.refreshableViewHeight};
@@ -391,8 +391,8 @@ var GiftedListView = React.createClass({
       return {x: 0, y: 0};
     }
   },
-  
-  
+
+
   renderListView(style = {}) {
     return (
       <ListView
@@ -403,23 +403,23 @@ var GiftedListView = React.createClass({
 
         renderHeader={this.props.refreshable === true && Platform.OS !== 'android' ? this._renderRefreshView : this.headerView}
         renderFooter={this._renderPaginationView}
-        
+
         onScroll={this.props.refreshable === true && Platform.OS !== 'android' ? this._onScroll : null}
         onResponderRelease={this.props.refreshable === true && Platform.OS !== 'android' ? this._onResponderRelease : null}
 
         scrollEventThrottle={200}
-        
+
         contentInset={this._calculateContentInset()}
         contentOffset={this._calculateContentOffset()}
-        
+
         automaticallyAdjustContentInsets={false}
         scrollEnabled={true}
         canCancelContentTouches={true}
-        
+
         renderSeparator={this.renderSeparator}
-        
+
         {...this.props}
-        
+
         style={[this.props.style, style]}
       />
     );
@@ -433,7 +433,7 @@ var GiftedListView = React.createClass({
           onRefresh={this._onRefresh}
 
           {...this.props.PullToRefreshViewAndroidProps}
-          
+
           style={[this.props.PullToRefreshViewAndroidProps.style, {flex: 1}]}
         >
           {this.renderListView({flex: 1})}
@@ -443,7 +443,7 @@ var GiftedListView = React.createClass({
       return this.renderListView();
     }
   },
-  
+
   defaultStyles: {
     separator: {
       height: 1,
