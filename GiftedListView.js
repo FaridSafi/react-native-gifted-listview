@@ -267,21 +267,25 @@ var GiftedListView = React.createClass({
   },
 
   _onRefresh(options = {}) {
-    this._scrollResponder.scrollTo(0);
-    this.setState({
-      refreshStatus: 'fetching',
-      isRefreshing: true,
-    });
-    this._setPage(1);
-    this.props.onFetch(this._getPage(), this._postRefresh, options);
+    if (this.isMounted()) {
+      this._scrollResponder.scrollTo(0);
+      this.setState({
+        refreshStatus: 'fetching',
+        isRefreshing: true,
+      });
+      this._setPage(1);
+      this.props.onFetch(this._getPage(), this._postRefresh, options);      
+    }
   },
 
   _postRefresh(rows = [], options = {}) {
-    this._updateRows(rows, options);
-    if (this.props.refreshable === true && Platform.OS !== 'android') {
-      // @issue
-      // if a scrolling is already in progress, this scroll will not be executed
-      this._scrollResponder.scrollTo(this.props.refreshableViewHeight);
+    if (this.isMounted()) {
+      this._updateRows(rows, options);
+      if (this.props.refreshable === true && Platform.OS !== 'android') {
+        // @issue
+        // if a scrolling is already in progress, this scroll will not be executed
+        this._scrollResponder.scrollTo(this.props.refreshableViewHeight);
+      }
     }
   },
 
@@ -304,21 +308,29 @@ var GiftedListView = React.createClass({
   },
 
   _updateRows(rows = [], options = {}) {
-    this._setRows(rows);
-    if (this.props.withSections === true) {
-      this.setState({
-        dataSource: this.state.dataSource.cloneWithRowsAndSections(rows),
-        refreshStatus: 'waiting',
-        isRefreshing: false,
-        paginationStatus: (options.allLoaded === true ? 'allLoaded' : 'waiting'),
-      });
+    if (rows !== null) {
+      this._setRows(rows);
+      if (this.props.withSections === true) {
+        this.setState({
+          dataSource: this.state.dataSource.cloneWithRowsAndSections(rows),
+          refreshStatus: 'waiting',
+          isRefreshing: false,
+          paginationStatus: (options.allLoaded === true ? 'allLoaded' : 'waiting'),
+        });
+      } else {
+        this.setState({
+          dataSource: this.state.dataSource.cloneWithRows(rows),
+          refreshStatus: 'waiting',
+          isRefreshing: false,
+          paginationStatus: (options.allLoaded === true ? 'allLoaded' : 'waiting'),
+        });    
+      } 
     } else {
       this.setState({
-        dataSource: this.state.dataSource.cloneWithRows(rows),
         refreshStatus: 'waiting',
         isRefreshing: false,
         paginationStatus: (options.allLoaded === true ? 'allLoaded' : 'waiting'),
-      });
+      });      
     }
   },
 
