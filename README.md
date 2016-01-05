@@ -22,7 +22,7 @@ var {
 var GiftedListView = require('react-native-gifted-listview');
 
 var Example = React.createClass({
-  
+
   /**
    * Will be called when refreshing
    * Should be replaced by your own logic
@@ -42,8 +42,8 @@ var Example = React.createClass({
       }
     }, 1000); // simulating network fetching
   },
-  
-  
+
+
   /**
    * When a row is touched
    * @param {object} rowData Row data
@@ -51,15 +51,15 @@ var Example = React.createClass({
   _onPress(rowData) {
     console.log(rowData+' pressed');
   },
-  
+
   /**
    * Render a row
    * @param {object} rowData Row data
    */
   _renderRowView(rowData) {
     return (
-      <TouchableHighlight 
-        style={styles.row} 
+      <TouchableHighlight
+        style={styles.row}
         underlayColor='#c8c7cc'
         onPress={() => this._onPress(rowData)}
       >  
@@ -67,7 +67,7 @@ var Example = React.createClass({
       </TouchableHighlight>
     );
   },
-  
+
   render() {
     return (
       <View style={styles.container}>
@@ -84,7 +84,7 @@ var Example = React.createClass({
               backgroundColor: '#eee',
             },
           }}
-          
+
           PullToRefreshViewAndroidProps={{
             colors: ['#ff0000', '#00ff00', '#0000ff'],
             progressBackgroundColor: '#c8c7cc',
@@ -114,7 +114,7 @@ var styles = {
 
 ### Advanced example
 
-[See Examples/example_advanced.js](Examples/example_advanced.js)
+[See GiftedListViewExample/example_advanced.js](GiftedListViewExample/example_advanced.js)
 
 
 ### Installation
@@ -140,4 +140,3 @@ var styles = {
 
 
 Feel free to ask me questions on Twitter [@FaridSafi](https://www.twitter.com/FaridSafi) !
-
