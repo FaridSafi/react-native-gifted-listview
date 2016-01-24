@@ -46,7 +46,7 @@ var GiftedListView = React.createClass({
       withSections: false,
       onFetch(page, callback, options) { callback([]); },
 
-      paginationFetchigView: null,
+      paginationFetchingView: null,
       paginationAllLoadedView: null,
       paginationWaitingView: null,
       refreshableFetchingView: null,
@@ -74,7 +74,7 @@ var GiftedListView = React.createClass({
     withSections: React.PropTypes.bool,
     onFetch: React.PropTypes.func,
 
-    paginationFetchigView: React.PropTypes.func,
+    paginationFetchingView: React.PropTypes.func,
     paginationAllLoadedView: React.PropTypes.func,
     paginationWaitingView: React.PropTypes.func,
     refreshableFetchingView: React.PropTypes.func,
@@ -93,9 +93,9 @@ var GiftedListView = React.createClass({
   _getRows() { return this._rows; },
 
 
-  paginationFetchigView() {
-    if (this.props.paginationFetchigView) {
-      return this.props.paginationFetchigView();
+  paginationFetchingView() {
+    if (this.props.paginationFetchingView) {
+      return this.props.paginationFetchingView();
     }
 
     return (
@@ -376,7 +376,7 @@ var GiftedListView = React.createClass({
 
   _renderPaginationView() {
     if ((this.state.paginationStatus === 'fetching' && this.props.pagination === true) || (this.state.paginationStatus === 'firstLoad' && this.props.firstLoader === true)) {
-      return this.paginationFetchigView();
+      return this.paginationFetchingView();
     } else if (this.state.paginationStatus === 'waiting' && this.props.pagination === true && (this.props.withSections === true || this._getRows().length > 0)) {
       return this.paginationWaitingView(this._onPaginate);
     } else if (this.state.paginationStatus === 'allLoaded' && this.props.pagination === true) {
