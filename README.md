@@ -7,6 +7,9 @@ A ListView with pull-to-refresh, infinite scrolling and more for Android and iOS
 ![](https://raw.githubusercontent.com/FaridSafi/react-native-gifted-listview/master/Captures/android_refresh_page_demo.gif)
 
 
+### Changelog
+- 0.0.12 RN 0.20.0 support (PR @akiver)
+
 ### Simple example
 
 
