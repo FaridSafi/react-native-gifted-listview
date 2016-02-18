@@ -268,7 +268,7 @@ var GiftedListView = React.createClass({
 
   _onRefresh(options = {}) {
     if (this.isMounted()) {
-      this._scrollResponder.scrollTo(0);
+      this._scrollResponder.scrollTo({y: 0});
       this.setState({
         refreshStatus: 'fetching',
         isRefreshing: true,
@@ -284,7 +284,7 @@ var GiftedListView = React.createClass({
       if (this.props.refreshable === true && Platform.OS !== 'android') {
         // @issue
         // if a scrolling is already in progress, this scroll will not be executed
-        this._scrollResponder.scrollTo(this.props.refreshableViewHeight);
+        this._scrollResponder.scrollTo({y: this.props.refreshableViewHeight});
       }
     }
   },
