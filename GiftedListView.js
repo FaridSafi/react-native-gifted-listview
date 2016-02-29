@@ -268,7 +268,7 @@ var GiftedListView = React.createClass({
 
   _onRefresh(options = {}) {
     if (this.isMounted()) {
-      this._scrollResponder.scrollTo(0);
+      //this._scrollResponder.scrollTo(0);
       this.setState({
         refreshStatus: 'fetching',
         isRefreshing: true,
@@ -389,19 +389,19 @@ var GiftedListView = React.createClass({
   },
 
   _calculateContentInset() {
-    if (this.props.refreshable === true && Platform.OS !== 'android') {
-      return {top: -1 * this.props.refreshableViewHeight, bottom: 0, left: 0, right: 0};
-    } else {
+    //if (this.props.refreshable === true && Platform.OS !== 'android') {
+    //  return {top: -1 * this.props.refreshableViewHeight, bottom: 0, left: 0, right: 0};
+    //} else {
       return {top: 0, bottom: 0, left: 0, right: 0};
-    }
+    //}
   },
 
   _calculateContentOffset() {
-    if (this.props.refreshable === true && Platform.OS !== 'android') {
-      return {x: 0, y: this.props.refreshableViewHeight};
-    } else {
+    //if (this.props.refreshable === true && Platform.OS !== 'android') {
+    //  return {x: 0, y: this.props.refreshableViewHeight};
+    //} else {
       return {x: 0, y: 0};
-    }
+    //}
   },
 
 
