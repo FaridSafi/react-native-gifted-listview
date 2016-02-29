@@ -112,7 +112,7 @@ var GiftedListView = React.createClass({
     return (
       <View style={[this.defaultStyles.paginationView, this.props.customStyles.paginationView]}>
         <Text style={[this.defaultStyles.actionsLabel, this.props.customStyles.actionsLabel]}>
-          ~
+          
         </Text>
       </View>
     );
