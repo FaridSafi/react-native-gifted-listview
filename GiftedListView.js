@@ -226,7 +226,7 @@ var GiftedListView = React.createClass({
 	if (this.props.onEndReached) {
 	  this.props.onEndReached();
 	}
-  }
+  },
 
   getInitialState() {
 
