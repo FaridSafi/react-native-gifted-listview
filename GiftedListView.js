@@ -44,6 +44,7 @@ var GiftedListView = React.createClass({
       headerView: null,
       sectionHeaderView: null,
       withSections: false,
+	  autoPaginate: false,
       onFetch(page, callback, options) { callback([]); },
 
       paginationFetchingView: null,
@@ -72,6 +73,7 @@ var GiftedListView = React.createClass({
     headerView: React.PropTypes.func,
     sectionHeaderView: React.PropTypes.func,
     withSections: React.PropTypes.bool,
+	autoPaginate: React.PropTypes.bool,
     onFetch: React.PropTypes.func,
 
     paginationFetchingView: React.PropTypes.func,
@@ -112,7 +114,7 @@ var GiftedListView = React.createClass({
     return (
       <View style={[this.defaultStyles.paginationView, this.props.customStyles.paginationView]}>
         <Text style={[this.defaultStyles.actionsLabel, this.props.customStyles.actionsLabel]}>
-          
+
         </Text>
       </View>
     );
@@ -217,6 +219,15 @@ var GiftedListView = React.createClass({
     );
   },
 
+  onEndReached() {
+	if (this.props.autoPaginate) {
+	  this._onPaginate();
+	}
+	if (this.props.onEndReached) {
+	  this.props.onEndReached();
+	}
+  }
+
   getInitialState() {
 
     if (this.props.refreshable === true && Platform.OS !== 'android') {
@@ -274,7 +285,7 @@ var GiftedListView = React.createClass({
         isRefreshing: true,
       });
       this._setPage(1);
-      this.props.onFetch(this._getPage(), this._postRefresh, options);      
+      this.props.onFetch(this._getPage(), this._postRefresh, options);
     }
   },
 
@@ -290,10 +301,19 @@ var GiftedListView = React.createClass({
   },
 
   _onPaginate() {
+	/*
     this.setState({
       paginationStatus: 'fetching',
     });
     this.props.onFetch(this._getPage() + 1, this._postPaginate, {});
+	*/
+	if (this.state.paginationStatus === 'firstLoad' ||
+		this.state.paginationStatus === 'waiting') {
+	  this.setState({
+		paginationStatus: 'fetching',
+	  });
+	  this.props.onFetch(this._getPage() + 1, this._postPaginate, {});
+	}
   },
 
   _postPaginate(rows = [], options = {}) {
@@ -323,14 +343,14 @@ var GiftedListView = React.createClass({
           refreshStatus: 'waiting',
           isRefreshing: false,
           paginationStatus: (options.allLoaded === true ? 'allLoaded' : 'waiting'),
-        });    
-      } 
+        });
+      }
     } else {
       this.setState({
         refreshStatus: 'waiting',
         isRefreshing: false,
         paginationStatus: (options.allLoaded === true ? 'allLoaded' : 'waiting'),
-      });      
+      });
     }
   },
 
@@ -429,6 +449,8 @@ var GiftedListView = React.createClass({
         canCancelContentTouches={true}
 
         renderSeparator={this.renderSeparator}
+
+		onEndReached={this.onEndReached}
 
         {...this.props}
 
