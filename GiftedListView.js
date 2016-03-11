@@ -8,7 +8,7 @@ var {
   TouchableHighlight,
   View,
   Text,
-  PullToRefreshViewAndroid
+  RefreshControl,
 } = React;
 
 
@@ -39,8 +39,12 @@ var GiftedListView = React.createClass({
       firstLoader: true,
       pagination: true,
       refreshable: true,
-      refreshableViewHeight: 50,
-      refreshableDistance: 40,
+      refreshableColors: undefined,
+      refreshableProgressBackgroundColor: undefined,
+      refreshableSize: undefined,
+      refreshableTitle: undefined,
+      refreshableTintColor: undefined,
+      renderRefreshControl: null,
       headerView: null,
       sectionHeaderView: null,
       withSections: false,
@@ -49,15 +53,8 @@ var GiftedListView = React.createClass({
       paginationFetchingView: null,
       paginationAllLoadedView: null,
       paginationWaitingView: null,
-      refreshableFetchingView: null,
-      refreshableWillRefreshView: null,
-      refreshableWaitingView: null,
       emptyView: null,
       renderSeparator: null,
-      PullToRefreshViewAndroidProps: {
-        colors: ['#000000'],
-        progressBackgroundColor: '#c8c7cc',
-      },
     };
   },
 
@@ -67,8 +64,12 @@ var GiftedListView = React.createClass({
     firstLoader: React.PropTypes.bool,
     pagination: React.PropTypes.bool,
     refreshable: React.PropTypes.bool,
-    refreshableViewHeight: React.PropTypes.number,
-    refreshableDistance: React.PropTypes.number,
+    refreshableColors: React.PropTypes.array,
+    refreshableProgressBackgroundColor: React.PropTypes.string,
+    refreshableSize: React.PropTypes.string,
+    refreshableTitle: React.PropTypes.string,
+    refreshableTintColor: React.PropTypes.string,
+    renderRefreshControl: React.PropTypes.func,
     headerView: React.PropTypes.func,
     sectionHeaderView: React.PropTypes.func,
     withSections: React.PropTypes.bool,
@@ -77,16 +78,10 @@ var GiftedListView = React.createClass({
     paginationFetchingView: React.PropTypes.func,
     paginationAllLoadedView: React.PropTypes.func,
     paginationWaitingView: React.PropTypes.func,
-    refreshableFetchingView: React.PropTypes.func,
-    refreshableWillRefreshView: React.PropTypes.func,
-    refreshableWaitingView: React.PropTypes.func,
     emptyView: React.PropTypes.func,
     renderSeparator: React.PropTypes.func,
-    PullToRefreshViewAndroidProps: React.PropTypes.object,
   },
 
-  _setY(y) { this._y = y; },
-  _getY(y) { return this._y; },
   _setPage(page) { this._page = page; },
   _getPage() { return this._page; },
   _setRows(rows) { this._rows = rows; },
@@ -140,51 +135,6 @@ var GiftedListView = React.createClass({
     }
     return this.props.headerView();
   },
-  refreshableFetchingView() {
-    if (this.props.refreshableFetchingView) {
-      return this.props.refreshableFetchingView();
-    }
-    return (
-      <View>
-        <View style={[this.defaultStyles.refreshableView, this.props.customStyles.refreshableView]}>
-          <GiftedSpinner />
-        </View>
-        {this.headerView()}
-      </View>
-    );
-  },
-  refreshableWillRefreshView() {
-    if (this.props.refreshableWillRefreshView) {
-      return this.props.refreshableWillRefreshView();
-    }
-
-    return (
-      <View>
-        <View style={[this.defaultStyles.refreshableView, this.props.customStyles.refreshableView]}>
-          <Text style={[this.defaultStyles.actionsLabel, this.props.customStyles.actionsLabel]}>
-            ↻
-          </Text>
-        </View>
-        {this.headerView()}
-      </View>
-    );
-  },
-  refreshableWaitingView(refreshCallback) {
-    if (this.props.refreshableWaitingView) {
-      return this.props.refreshableWaitingView(refreshCallback);
-    }
-
-    return (
-      <View>
-          <View style={[this.defaultStyles.refreshableView, this.props.customStyles.refreshableView]}>
-            <Text style={[this.defaultStyles.actionsLabel, this.props.customStyles.actionsLabel]}>
-              ↓
-            </Text>
-          </View>
-        {this.headerView()}
-      </View>
-    );
-  },
   emptyView(refreshCallback) {
     if (this.props.emptyView) {
       return this.props.emptyView(refreshCallback);
@@ -218,13 +168,6 @@ var GiftedListView = React.createClass({
   },
 
   getInitialState() {
-
-    if (this.props.refreshable === true && Platform.OS !== 'android') {
-      this._setY(this.props.refreshableViewHeight);
-    } else {
-      this._setY(0);
-    }
-
     this._setPage(1);
     this._setRows([]);
 
@@ -236,7 +179,6 @@ var GiftedListView = React.createClass({
       });
       return {
         dataSource: ds.cloneWithRowsAndSections(this._getRows()),
-        refreshStatus: 'waiting',
         isRefreshing: false,
         paginationStatus: 'firstLoad',
       };
@@ -246,7 +188,6 @@ var GiftedListView = React.createClass({
       });
       return {
         dataSource: ds.cloneWithRows(this._getRows()),
-        refreshStatus: 'waiting',
         isRefreshing: false,
         paginationStatus: 'firstLoad',
       };
@@ -254,7 +195,6 @@ var GiftedListView = React.createClass({
   },
 
   componentDidMount() {
-    this._scrollResponder = this.refs.listview.getScrollResponder();
     this.props.onFetch(this._getPage(), this._postRefresh, {firstLoad: true});
   },
 
@@ -268,24 +208,17 @@ var GiftedListView = React.createClass({
 
   _onRefresh(options = {}) {
     if (this.isMounted()) {
-      this._scrollResponder.scrollTo({y: 0});
       this.setState({
-        refreshStatus: 'fetching',
         isRefreshing: true,
       });
       this._setPage(1);
-      this.props.onFetch(this._getPage(), this._postRefresh, options);      
+      this.props.onFetch(this._getPage(), this._postRefresh, options);
     }
   },
 
   _postRefresh(rows = [], options = {}) {
     if (this.isMounted()) {
       this._updateRows(rows, options);
-      if (this.props.refreshable === true && Platform.OS !== 'android') {
-        // @issue
-        // if a scrolling is already in progress, this scroll will not be executed
-        this._scrollResponder.scrollTo({y: this.props.refreshableViewHeight});
-      }
     }
   },
 
@@ -313,64 +246,21 @@ var GiftedListView = React.createClass({
       if (this.props.withSections === true) {
         this.setState({
           dataSource: this.state.dataSource.cloneWithRowsAndSections(rows),
-          refreshStatus: 'waiting',
           isRefreshing: false,
           paginationStatus: (options.allLoaded === true ? 'allLoaded' : 'waiting'),
         });
       } else {
         this.setState({
           dataSource: this.state.dataSource.cloneWithRows(rows),
-          refreshStatus: 'waiting',
           isRefreshing: false,
           paginationStatus: (options.allLoaded === true ? 'allLoaded' : 'waiting'),
-        });    
-      } 
+        });
+      }
     } else {
       this.setState({
-        refreshStatus: 'waiting',
         isRefreshing: false,
         paginationStatus: (options.allLoaded === true ? 'allLoaded' : 'waiting'),
-      });      
-    }
-  },
-
-  _onResponderRelease() {
-    if (this.props.refreshable === true) {
-      if (Platform.OS !== 'android') {
-        if (this.state.refreshStatus === 'willRefresh') {
-          this._onRefresh();
-        }
-      }
-    }
-  },
-
-  _onScroll(e) {
-    this._setY(e.nativeEvent.contentOffset.y);
-    if (this.props.refreshable === true) {
-      if (Platform.OS !== 'android') {
-        if (this._getY() < this.props.refreshableViewHeight - this.props.refreshableDistance
-        && this.state.refreshStatus === 'waiting'
-        && this._scrollResponder.scrollResponderHandleScrollShouldSetResponder() === true
-      ) {
-          this.setState({
-            refreshStatus: 'willRefresh',
-            isRefreshing: false,
-          });
-        }
-      }
-    }
-  },
-
-  _renderRefreshView() {
-    switch (this.state.refreshStatus) {
-      case 'fetching':
-        return this.refreshableFetchingView();
-        break;
-      case 'willRefresh':
-        return this.refreshableWillRefreshView();
-        break;
-      default:
-        return this.refreshableWaitingView(this._onRefresh);
+      });
     }
   },
 
@@ -388,84 +278,49 @@ var GiftedListView = React.createClass({
     }
   },
 
-  _calculateContentInset() {
-    if (this.props.refreshable === true && Platform.OS !== 'android') {
-      return {top: -1 * this.props.refreshableViewHeight, bottom: 0, left: 0, right: 0};
-    } else {
-      return {top: 0, bottom: 0, left: 0, right: 0};
+  renderRefreshControl() {
+    if (this.props.renderRefreshControl) {
+      return this.props.renderRefreshControl({ onRefresh: this._onRefresh });
     }
+    return (
+      <RefreshControl
+        onRefresh={this._onRefresh}
+        refreshing={this.state.isRefreshing}
+        colors={this.props.refreshableColors}
+        progressBackgroundColor={this.props.refreshableProgressBackgroundColor}
+        size={this.props.refreshableSize}
+        tintColor={this.props.refreshableTintColor}
+        title={this.props.refreshableTitle}
+      />
+    );
   },
 
-  _calculateContentOffset() {
-    if (this.props.refreshable === true && Platform.OS !== 'android') {
-      return {x: 0, y: this.props.refreshableViewHeight};
-    } else {
-      return {x: 0, y: 0};
-    }
-  },
-
-
-  renderListView(style = {}) {
+  render() {
     return (
       <ListView
         ref="listview"
         dataSource={this.state.dataSource}
         renderRow={this.props.rowView}
         renderSectionHeader={this.props.sectionHeaderView}
-
-        renderHeader={this.props.refreshable === true && Platform.OS !== 'android' ? this._renderRefreshView : this.headerView}
         renderFooter={this._renderPaginationView}
-
-        onScroll={this.props.refreshable === true && Platform.OS !== 'android' ? this._onScroll : null}
-        onResponderRelease={this.props.refreshable === true && Platform.OS !== 'android' ? this._onResponderRelease : null}
-
-        scrollEventThrottle={200}
-
-        contentInset={this._calculateContentInset()}
-        contentOffset={this._calculateContentOffset()}
+        renderSeparator={this.renderSeparator}
 
         automaticallyAdjustContentInsets={false}
         scrollEnabled={true}
         canCancelContentTouches={true}
-
-        renderSeparator={this.renderSeparator}
+        refreshControl={this.props.refreshable === true ? this.renderRefreshControl() : null}
 
         {...this.props}
 
-        style={[this.props.style, style]}
+        style={this.props.style}
       />
     );
-  },
-
-  render() {
-    if (Platform.OS === 'android' && this.props.refreshable === true) {
-      return (
-        <PullToRefreshViewAndroid
-          refreshing={this.state.isRefreshing}
-          onRefresh={this._onRefresh}
-
-          {...this.props.PullToRefreshViewAndroidProps}
-
-          style={[this.props.PullToRefreshViewAndroidProps.style, {flex: 1}]}
-        >
-          {this.renderListView({flex: 1})}
-        </PullToRefreshViewAndroid>
-      );
-    } else {
-      return this.renderListView();
-    }
   },
 
   defaultStyles: {
     separator: {
       height: 1,
       backgroundColor: '#CCC'
-    },
-    refreshableView: {
-      height: 50,
-      backgroundColor: '#DDD',
-      justifyContent: 'center',
-      alignItems: 'center',
     },
     actionsLabel: {
       fontSize: 20,
