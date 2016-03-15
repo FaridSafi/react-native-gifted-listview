@@ -359,7 +359,7 @@ var GiftedListView = React.createClass({
       if (Platform.OS !== 'android') {
         if (this.state.refreshStatus === 'willRefresh') {
           this._onRefresh();
-        } else if (this.props.refreshable) {
+        } else if (this.props.refreshable && this._getY() < this.props.refreshableViewHeight) {
           this._scrollResponder.scrollTo(this.props.refreshableViewHeight);
         }
       }
