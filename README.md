@@ -83,15 +83,12 @@ var Example = React.createClass({
           refreshable={true} // enable pull-to-refresh for iOS and touch-to-refresh for Android
           withSections={false} // enable sections
           customStyles={{
-            refreshableView: {
+            paginationView: {
               backgroundColor: '#eee',
             },
           }}
 
-          PullToRefreshViewAndroidProps={{
-            colors: ['#ff0000', '#00ff00', '#0000ff'],
-            progressBackgroundColor: '#c8c7cc',
-          }}
+          refreshableTintColor="blue"
         />
       </View>
     );
