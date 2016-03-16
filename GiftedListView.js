@@ -44,6 +44,7 @@ var GiftedListView = React.createClass({
       headerView: null,
       sectionHeaderView: null,
       withSections: false,
+	  autoPaginate: false,
       onFetch(page, callback, options) { callback([]); },
 
       paginationFetchingView: null,
@@ -72,6 +73,7 @@ var GiftedListView = React.createClass({
     headerView: React.PropTypes.func,
     sectionHeaderView: React.PropTypes.func,
     withSections: React.PropTypes.bool,
+	autoPaginate: React.PropTypes.bool,
     onFetch: React.PropTypes.func,
 
     paginationFetchingView: React.PropTypes.func,
@@ -112,7 +114,7 @@ var GiftedListView = React.createClass({
     return (
       <View style={[this.defaultStyles.paginationView, this.props.customStyles.paginationView]}>
         <Text style={[this.defaultStyles.actionsLabel, this.props.customStyles.actionsLabel]}>
-          ~
+
         </Text>
       </View>
     );
@@ -217,6 +219,15 @@ var GiftedListView = React.createClass({
     );
   },
 
+  onEndReached() {
+	if (this.props.autoPaginate) {
+	  this._onPaginate();
+	}
+	if (this.props.onEndReached) {
+	  this.props.onEndReached();
+	}
+  },
+
   getInitialState() {
 
     if (this.props.refreshable === true && Platform.OS !== 'android') {
@@ -268,13 +279,13 @@ var GiftedListView = React.createClass({
 
   _onRefresh(options = {}) {
     if (this.isMounted()) {
-      this._scrollResponder.scrollTo({y: 0});
+      //this._scrollResponder.scrollTo(0);
       this.setState({
         refreshStatus: 'fetching',
         isRefreshing: true,
       });
       this._setPage(1);
-      this.props.onFetch(this._getPage(), this._postRefresh, options);      
+      this.props.onFetch(this._getPage(), this._postRefresh, options);
     }
   },
 
@@ -284,16 +295,25 @@ var GiftedListView = React.createClass({
       if (this.props.refreshable === true && Platform.OS !== 'android') {
         // @issue
         // if a scrolling is already in progress, this scroll will not be executed
-        this._scrollResponder.scrollTo({y: this.props.refreshableViewHeight});
+        this._scrollResponder.scrollTo(this.props.refreshableViewHeight);
       }
     }
   },
 
   _onPaginate() {
+	/*
     this.setState({
       paginationStatus: 'fetching',
     });
     this.props.onFetch(this._getPage() + 1, this._postPaginate, {});
+	*/
+	if (this.state.paginationStatus === 'firstLoad' ||
+		this.state.paginationStatus === 'waiting') {
+	  this.setState({
+		paginationStatus: 'fetching',
+	  });
+	  this.props.onFetch(this._getPage() + 1, this._postPaginate, {});
+	}
   },
 
   _postPaginate(rows = [], options = {}) {
@@ -323,14 +343,14 @@ var GiftedListView = React.createClass({
           refreshStatus: 'waiting',
           isRefreshing: false,
           paginationStatus: (options.allLoaded === true ? 'allLoaded' : 'waiting'),
-        });    
-      } 
+        });
+      }
     } else {
       this.setState({
         refreshStatus: 'waiting',
         isRefreshing: false,
         paginationStatus: (options.allLoaded === true ? 'allLoaded' : 'waiting'),
-      });      
+      });
     }
   },
 
@@ -339,6 +359,8 @@ var GiftedListView = React.createClass({
       if (Platform.OS !== 'android') {
         if (this.state.refreshStatus === 'willRefresh') {
           this._onRefresh();
+        } else if (this.props.refreshable && this._getY() < this.props.refreshableViewHeight) {
+          this._scrollResponder.scrollTo(this.props.refreshableViewHeight);
         }
       }
     }
@@ -349,13 +371,15 @@ var GiftedListView = React.createClass({
     if (this.props.refreshable === true) {
       if (Platform.OS !== 'android') {
         if (this._getY() < this.props.refreshableViewHeight - this.props.refreshableDistance
-        && this.state.refreshStatus === 'waiting'
-        && this._scrollResponder.scrollResponderHandleScrollShouldSetResponder() === true
-      ) {
+        && this.state.refreshStatus === 'waiting') {
+          if (this._scrollResponder.scrollResponderHandleScrollShouldSetResponder() === true) {
           this.setState({
             refreshStatus: 'willRefresh',
             isRefreshing: false,
           });
+          } else {
+            this._scrollResponder.scrollTo(this.props.refreshableViewHeight);
+          }
         }
       }
     }
@@ -389,19 +413,19 @@ var GiftedListView = React.createClass({
   },
 
   _calculateContentInset() {
-    if (this.props.refreshable === true && Platform.OS !== 'android') {
-      return {top: -1 * this.props.refreshableViewHeight, bottom: 0, left: 0, right: 0};
-    } else {
+    //if (this.props.refreshable === true && Platform.OS !== 'android') {
+    //  return {top: -1 * this.props.refreshableViewHeight, bottom: 0, left: 0, right: 0};
+    //} else {
       return {top: 0, bottom: 0, left: 0, right: 0};
-    }
+    //}
   },
 
   _calculateContentOffset() {
-    if (this.props.refreshable === true && Platform.OS !== 'android') {
-      return {x: 0, y: this.props.refreshableViewHeight};
-    } else {
+    //if (this.props.refreshable === true && Platform.OS !== 'android') {
+    //  return {x: 0, y: this.props.refreshableViewHeight};
+    //} else {
       return {x: 0, y: 0};
-    }
+    //}
   },
 
 
@@ -429,6 +453,8 @@ var GiftedListView = React.createClass({
         canCancelContentTouches={true}
 
         renderSeparator={this.renderSeparator}
+
+		onEndReached={this.onEndReached}
 
         {...this.props}
 
