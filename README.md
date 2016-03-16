@@ -8,7 +8,10 @@ A ListView with pull-to-refresh, infinite scrolling and more for Android and iOS
 
 
 ### Changelog
-- 0.0.12 RN 0.20.0 support (PR @akiver)
+#### 0.0.13
+- Use RefreshControl instead of own implementation for pull-to-refresh (PR @SpaceK33z)
+
+
 
 ### Simple example
 
