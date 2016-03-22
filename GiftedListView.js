@@ -302,6 +302,7 @@ var GiftedListView = React.createClass({
         dataSource={this.state.dataSource}
         renderRow={this.props.rowView}
         renderSectionHeader={this.props.sectionHeaderView}
+        renderHeader={this.headerView}
         renderFooter={this._renderPaginationView}
         renderSeparator={this.renderSeparator}
 
