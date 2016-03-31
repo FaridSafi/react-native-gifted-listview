@@ -47,6 +47,7 @@ var GiftedListView = React.createClass({
       renderRefreshControl: null,
       headerView: null,
       sectionHeaderView: null,
+      scrollEnabled: true,
       withSections: false,
       onFetch(page, callback, options) { callback([]); },
 
@@ -72,6 +73,7 @@ var GiftedListView = React.createClass({
     renderRefreshControl: React.PropTypes.func,
     headerView: React.PropTypes.func,
     sectionHeaderView: React.PropTypes.func,
+    scrollEnabled: React.PropTypes.bool,
     withSections: React.PropTypes.bool,
     onFetch: React.PropTypes.func,
 
@@ -307,7 +309,7 @@ var GiftedListView = React.createClass({
         renderSeparator={this.renderSeparator}
 
         automaticallyAdjustContentInsets={false}
-        scrollEnabled={true}
+        scrollEnabled={this.props.scrollEnabled}
         canCancelContentTouches={true}
         refreshControl={this.props.refreshable === true ? this.renderRefreshControl() : null}
 
