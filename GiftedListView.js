@@ -49,6 +49,7 @@ var GiftedListView = React.createClass({
       sectionHeaderView: null,
       scrollEnabled: true,
       withSections: false,
+      autoPaginate: false,
       onFetch(page, callback, options) { callback([]); },
 
       paginationFetchingView: null,
@@ -75,6 +76,7 @@ var GiftedListView = React.createClass({
     sectionHeaderView: React.PropTypes.func,
     scrollEnabled: React.PropTypes.bool,
     withSections: React.PropTypes.bool,
+    autoPaginate: React.PropTypes.bool,
     onFetch: React.PropTypes.func,
 
     paginationFetchingView: React.PropTypes.func,
@@ -224,58 +226,71 @@ var GiftedListView = React.createClass({
     }
   },
 
+  onEndReached() {
+    if(!this.state.firstLoadComplete) return;
+
+    if (this.props.autoPaginate) {
+      this._onPaginate();
+    }
+    if (this.props.onEndReached) {
+      this.props.onEndReached();
+    }
+  },
   _onPaginate() {
-    if(this.state.paginationStatus==='allLoaded'){
-      return null
-    }else {
-      this.setState({
-        paginationStatus: 'fetching',
-      });
+    if (this.state.paginationStatus === 'firstLoad' || this.state.paginationStatus === 'waiting') {
+      this.setState({paginationStatus: 'fetching'});
       this.props.onFetch(this._getPage() + 1, this._postPaginate, {});
     }
   },
 
   _postPaginate(rows = [], options = {}) {
     this._setPage(this._getPage() + 1);
+
     var mergedRows = null;
+
     if (this.props.withSections === true) {
       mergedRows = MergeRecursive(this._getRows(), rows);
     } else {
       mergedRows = this._getRows().concat(rows);
     }
+
     this._updateRows(mergedRows, options);
   },
 
+
   _updateRows(rows = [], options = {}) {
+    let state = {
+      isRefreshing: false,
+      paginationStatus: (options.allLoaded === true ? 'allLoaded' : 'waiting'),
+    };
+
     if (rows !== null) {
       this._setRows(rows);
+
       if (this.props.withSections === true) {
-        this.setState({
-          dataSource: this.state.dataSource.cloneWithRowsAndSections(rows),
-          isRefreshing: false,
-          paginationStatus: (options.allLoaded === true ? 'allLoaded' : 'waiting'),
-        });
+        state.dataSource = this.state.dataSource.cloneWithRowsAndSections(rows);
       } else {
-        this.setState({
-          dataSource: this.state.dataSource.cloneWithRows(rows),
-          isRefreshing: false,
-          paginationStatus: (options.allLoaded === true ? 'allLoaded' : 'waiting'),
-        });
+        state.dataSource = this.state.dataSource.cloneWithRows(rows);
       }
-    } else {
-      this.setState({
-        isRefreshing: false,
-        paginationStatus: (options.allLoaded === true ? 'allLoaded' : 'waiting'),
-      });
     }
+
+    this.setState(state);
+
+    //this must be fired separately or iOS will call onEndReached 2-3 additional times as
+    //the ListView is filled. So instead we rely on React's rendering to cue this task
+    //until after the previous state is filled and the ListView rendered. After that,
+    //onEndReached callbacks will fire. See onEndReached() above.
+    if(!this.state.firstLoadComplete) this.setState({firstLoadComplete: true});
   },
 
   _renderPaginationView() {
-    if ((this.state.paginationStatus === 'fetching' && this.props.pagination === true) || (this.state.paginationStatus === 'firstLoad' && this.props.firstLoader === true)) {
+    let paginationEnabled = this.props.pagination === true || this.props.autoPaginate === true;
+
+    if ((this.state.paginationStatus === 'fetching' && paginationEnabled) || (this.state.paginationStatus === 'firstLoad' && this.props.firstLoader === true)) {
       return this.paginationFetchingView();
-    } else if (this.state.paginationStatus === 'waiting' && this.props.pagination === true && (this.props.withSections === true || this._getRows().length > 0)) {
+    } else if (this.state.paginationStatus === 'waiting' && this.props.pagination === true && (this.props.withSections === true || this._getRows().length > 0)) { //never show waiting for autoPaginate
       return this.paginationWaitingView(this._onPaginate);
-    } else if (this.state.paginationStatus === 'allLoaded' && this.props.pagination === true) {
+    } else if (this.state.paginationStatus === 'allLoaded' && paginationEnabled) {
       return this.paginationAllLoadedView();
     } else if (this._getRows().length === 0) {
       return this.emptyView(this._onRefresh);
@@ -311,7 +326,7 @@ var GiftedListView = React.createClass({
         renderHeader={this.headerView}
         renderFooter={this._renderPaginationView}
         renderSeparator={this.renderSeparator}
-
+        onEndReached={this.onEndReached}
         automaticallyAdjustContentInsets={false}
         scrollEnabled={this.props.scrollEnabled}
         canCancelContentTouches={true}
