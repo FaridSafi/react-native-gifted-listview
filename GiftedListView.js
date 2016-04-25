@@ -60,6 +60,9 @@ var GiftedListView = React.createClass({
       paginationWaitingView: null,
       emptyView: null,
       renderSeparator: null,
+
+      rows: null,
+      fetchOptions: null,
     };
   },
 
@@ -89,6 +92,9 @@ var GiftedListView = React.createClass({
     paginationWaitingView: React.PropTypes.func,
     emptyView: React.PropTypes.func,
     renderSeparator: React.PropTypes.func,
+
+    rows: React.PropTypes.array,
+    fetchOptions: React.PropTypes.object,
   },
 
   _setPage(page) { this._page = page; },
@@ -215,19 +221,11 @@ var GiftedListView = React.createClass({
     this.refs.listview.setNativeProps(props);
   },
 
-  //The refactoring was done solely so we can pass `beforeOptions` along
-  //and insure such things as `lastManualRefreshAt` are passed to client code and back to our `_updateRows` method.
-  //But I think this could be useful for any data we want to pass to developers and guarantee comes back to us.
-  _fetch(page, beforeOptions, postCallback) {
-    postCallback = postCallback || this._postRefresh;
-
-    this.props.onFetch(page, (rows, options) => {
-      postCallback(rows, Object.assign(beforeOptions, options));
-    }, beforeOptions);
-  },
-
   scrollTo(config) {
     this.refs.listview.scrollTo(config);
+  },
+  refresh(options) {
+    return this._refresh(options);
   },
   _refresh(options) {
     this.lastManualRefreshAt = new Date; //can trigger scrollview to push past endReached threshold if you are already scrolled down when you call this
@@ -248,6 +246,42 @@ var GiftedListView = React.createClass({
       this._setPage(1);
       this._fetch(this._getPage(), options);
     }
+  },
+
+  //The refactoring was done solely so we can pass `beforeOptions` along
+  //and insure such things as `lastManualRefreshAt` are passed to client code and back to our `_updateRows` method.
+  //But I think this could be useful for any data we want to pass to developers and guarantee comes back to us.
+  _fetch(page, beforeOptions, postCallback) {
+    postCallback = postCallback || this._postRefresh;
+
+    Object.assign(beforeOptions, this.props.fetchOptions); //any fetch options will be passed along to `props.onFetch` in order to use for async queries
+
+    this.beforeOptions = beforeOptions; //will be used by componentWillReceive props; parent components only need to provide rows
+
+    this.props.onFetch(page, (rows, options) => {
+      postCallback(rows, Object.assign(beforeOptions, options));
+    }, beforeOptions);
+  },
+
+  //Configure props for `onFetch`, `fetchOptions` and 'rows' to declaratively change the rows displayed.
+  //`onFetch` should now be used to dispatch a redux action, which reduces the `rows` prop :)
+  componentWillReceiveProps(nextProps) {
+    if(!this.props.rows) return;
+
+    if(nextProps.rows !== this.props.rows) {
+      if(this.beforeOptions.paginatedFetch) {
+        this._postPaginate(rows, {...this.beforeOptions, allLoaded: nextProps.allLoaded});
+      }
+      else this._postRefresh(rows, this.beforeOptions);
+    }
+
+    //allow for declaratively refreshing simply by changing fetchOptions,
+    //which will then call `onFetch` and if done right will result in new `rows` props, i.e. the above code.
+    else if(nextProps.fetchOptions !== this.props.fetchOptions) {
+      this.refresh(nextProps.fetchOptions);
+    }
+
+    this.beforeOptions = null;
   },
 
   _postRefresh(rows = [], options = {}) {
@@ -301,7 +335,7 @@ var GiftedListView = React.createClass({
   _onPaginate() {
     if (this.state.paginationStatus === 'firstLoad' || this.state.paginationStatus === 'waiting') {
       this.setState({paginationStatus: 'fetching'});
-      this._fetch(this._getPage() + 1, {}, this._postPaginate);
+      this._fetch(this._getPage() + 1, {paginatedFetch: true}, this._postPaginate);
     }
   },
 
@@ -397,7 +431,7 @@ var GiftedListView = React.createClass({
         //onResponderMove={this.onResponderMove}
         onResponderRelease={this.onResponderRelease}
         //onMomentumScrollEnd={this.onMomentumScrollEnd}
-        
+
         //check out this thread: https://github.com/facebook/react-native/issues/1410
         //and this stackoverflow post: http://stackoverflow.com/questions/33350556/how-to-get-onpress-event-from-scrollview-component-in-react-native
         //basically onScrollAnimationEnd is incorrect (onMomentumScrollEnd is the right one) and all the native event callbacks
