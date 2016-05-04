@@ -210,6 +210,7 @@ var GiftedListView = React.createClass({
   },
 
   componentDidMount() {
+    window.gifted = this;
     this._fetch(this._getPage(), {firstLoad: true});
 
     //imperative OOP state utilized since onEndReached is imperatively called. So why waste cycles on rendering, which
@@ -224,9 +225,12 @@ var GiftedListView = React.createClass({
   scrollTo(config) {
     this.refs.listview.scrollTo(config);
   },
+
+  //open up `refresh` as a public API
   refresh(options) {
     return this._refresh(options);
   },
+
   _refresh(options) {
     this.lastManualRefreshAt = new Date; //can trigger scrollview to push past endReached threshold if you are already scrolled down when you call this
 
@@ -235,7 +239,7 @@ var GiftedListView = React.createClass({
       mustSetLastManualRefreshAt: true, //we pass it along, so when the rows are updated we know to store the date as well
     }, options));
 
-    if(options.scrollToTop) this.scrollTo({y: -80}); //if you manually refresh the list, you often want to go to the top again, such as when filtering
+    //if(options.scrollToTop) this.scrollTo({y: -80}); //if you manually refresh the list, you often want to go to the top again, such as when filtering
   },
 
   _onRefresh(options = {}) {
@@ -244,7 +248,9 @@ var GiftedListView = React.createClass({
         isRefreshing: true,
       });
       this._setPage(1);
-      this._fetch(this._getPage(), options);
+      this.refreshedAt = new Date;
+      let page = this._getPage();
+      this._fetch(page, options);
     }
   },
 
@@ -254,7 +260,7 @@ var GiftedListView = React.createClass({
   _fetch(page, beforeOptions, postCallback) {
     postCallback = postCallback || this._postRefresh;
 
-    Object.assign(beforeOptions, this.props.fetchOptions); //any fetch options will be passed along to `props.onFetch` in order to use for async queries
+    Object.assign({}, beforeOptions, this.props.fetchOptions); //any fetch options will be passed along to `props.onFetch` in order to use for async queries
 
     this.beforeOptions = beforeOptions; //will be used by componentWillReceive props; parent components only need to provide rows
 
@@ -265,29 +271,66 @@ var GiftedListView = React.createClass({
 
   //Configure props for `onFetch`, `fetchOptions` and 'rows' to declaratively change the rows displayed.
   //`onFetch` should now be used to dispatch a redux action, which reduces the `rows` prop :)
-  componentWillReceiveProps(nextProps) {
-    if(!this.props.rows) return;
+  componentWillReceiveProps(nextProps, nextState) {
+    let rows = nextProps.rows;
 
-    if(nextProps.rows !== this.props.rows) {
-      if(this.beforeOptions.paginatedFetch) {
+    console.log("MAIN GIFTED", rows !== this.props.rows, JSON.stringify(nextProps.fetchOptions) !== JSON.stringify(this.props.fetchOptions))
+
+
+    if(rows !== this.props.rows) {
+      if(this.beforeOptions && this.beforeOptions.paginatedFetch) {
         this._postPaginate(rows, {...this.beforeOptions, allLoaded: nextProps.allLoaded});
       }
-      else this._postRefresh(rows, this.beforeOptions);
+      else {
+        let timeSinceRefresh = new Date - this.refreshedAt;                //make sure at least 1 second goes by before hiding refresh control,
+        let delay = timeSinceRefresh > 1000 ? 0 : 1000 - timeSinceRefresh; //or otherwise it will stick to its open position
+
+        setTimeout(() => {
+          this._postRefresh(rows, this.beforeOptions);
+        }, delay);
+      }
     }
 
     //allow for declaratively refreshing simply by changing fetchOptions,
     //which will then call `onFetch` and if done right will result in new `rows` props, i.e. the above code.
-    else if(nextProps.fetchOptions !== this.props.fetchOptions) {
+    else if(JSON.stringify(nextProps.fetchOptions) !== JSON.stringify(this.props.fetchOptions)) {
       this.refresh(nextProps.fetchOptions);
     }
 
-    this.beforeOptions = null;
+    this.beforeOptions = {};
   },
 
   _postRefresh(rows = [], options = {}) {
     if (this.isMounted()) {
       this._updateRows(rows, options);
     }
+  },
+
+  _updateRows(rows = [], options = {}) {
+    let state = {
+      isRefreshing: false,
+      paginationStatus: (options.allLoaded === true || rows.length === 0 ? 'allLoaded' : 'waiting'),
+    };
+
+    if(options.mustSetLastManualRefreshAt) this.lastManualRefreshAt = new Date;
+
+    if (rows !== null) {
+      this._setRows(rows);
+
+      if (this.props.withSections === true) {
+        state.dataSource = this.state.dataSource.cloneWithRowsAndSections(rows);
+      } else {
+        state.dataSource = this.state.dataSource.cloneWithRows(rows);
+      }
+    }
+
+    this.setState(state, this.props.onRefresh);
+
+    //this must be fired separately or iOS will call onEndReached 2-3 additional times as
+    //the ListView is filled. So instead we rely on React's rendering to cue this task
+    //until after the previous state is filled and the ListView rendered. After that,
+    //onEndReached callbacks will fire. See onEndReached() above.
+    if(!this.firstLoadCompleteAt) this.firstLoadCompleteAt = new Date;
   },
 
   onEndReached() {
@@ -347,40 +390,17 @@ var GiftedListView = React.createClass({
     if (this.props.withSections === true) {
       mergedRows = MergeRecursive(this._getRows(), rows);
     } else {
-      mergedRows = this._getRows().concat(rows);
+      if(this.props.dontConcat) {
+        mergedRows = rows; //because rows are already concatenated for use in a Redux store that needs access to all rows
+      }
+      else {
+        mergedRows = this._getRows().concat(rows);
+      }
     }
 
     this.lastPaginateUpdateAt = new Date;
 
     this._updateRows(mergedRows, options);
-  },
-
-
-  _updateRows(rows = [], options = {}) {
-    let state = {
-      isRefreshing: false,
-      paginationStatus: (options.allLoaded === true ? 'allLoaded' : 'waiting'),
-    };
-
-    if(options.mustSetLastManualRefreshAt) this.lastManualRefreshAt = new Date;
-
-    if (rows !== null) {
-      this._setRows(rows);
-
-      if (this.props.withSections === true) {
-        state.dataSource = this.state.dataSource.cloneWithRowsAndSections(rows);
-      } else {
-        state.dataSource = this.state.dataSource.cloneWithRows(rows);
-      }
-    }
-
-    this.setState(state);
-
-    //this must be fired separately or iOS will call onEndReached 2-3 additional times as
-    //the ListView is filled. So instead we rely on React's rendering to cue this task
-    //until after the previous state is filled and the ListView rendered. After that,
-    //onEndReached callbacks will fire. See onEndReached() above.
-    if(!this.firstLoadCompleteAt) this.firstLoadCompleteAt = new Date;
   },
 
   _renderPaginationView() {
