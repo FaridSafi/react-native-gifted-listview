@@ -274,9 +274,6 @@ var GiftedListView = React.createClass({
   componentWillReceiveProps(nextProps, nextState) {
     let rows = nextProps.rows;
 
-    console.log("MAIN GIFTED", rows !== this.props.rows, JSON.stringify(nextProps.fetchOptions) !== JSON.stringify(this.props.fetchOptions))
-
-
     if(rows !== this.props.rows) {
       if(this.beforeOptions && this.beforeOptions.paginatedFetch) {
         this._postPaginate(rows, {...this.beforeOptions, allLoaded: nextProps.allLoaded});
