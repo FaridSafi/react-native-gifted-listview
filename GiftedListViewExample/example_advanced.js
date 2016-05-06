@@ -4,14 +4,14 @@
  */
 'use strict';
 
-var React = require('react-native');
+var React = require('react');
 var {
   StyleSheet,
   Text,
   View,
   TouchableHighlight,
   Platform
-} = React;
+} = require('react-native');
 
 var GiftedListView = require('react-native-gifted-listview');
 var GiftedSpinner = require('react-native-gifted-spinner');
