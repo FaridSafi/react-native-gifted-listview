@@ -2,13 +2,12 @@
  * Sample React Native App
  * https://github.com/facebook/react-native
  */
-'use strict';
 
-var React = require('react-native');
-var {
+import React, { Component } from 'react';
+import {
   AppRegistry
-} = React;
+} from 'react-native';
 
-var Example = require('./example_advanced.js');
+import GiftedListViewExample from './example_advanced.js';
 
-AppRegistry.registerComponent('GiftedListViewExample', () => Example);
+AppRegistry.registerComponent('GiftedListViewExample', () => GiftedListViewExample);
