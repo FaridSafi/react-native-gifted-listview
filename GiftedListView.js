@@ -12,6 +12,9 @@ var {
   ScrollView,
 } = React;
 
+import shallowCompare from 'react-addons-shallow-compare';
+
+
 
 // small helper function which merged two objects into one
 function MergeRecursive(obj1, obj2) {
@@ -239,14 +242,14 @@ var GiftedListView = React.createClass({
       mustSetLastManualRefreshAt: true, //we pass it along, so when the rows are updated we know to store the date as well
     }, options));
 
-    //if(options.scrollToTop) this.scrollTo({y: -80}); //if you manually refresh the list, you often want to go to the top again, such as when filtering
+    this.scrollTo({y: 0}); //refreshing may be triggered by new fetchOptions while scrolled down, which should trigger scrolling to the top
   },
 
   _onRefresh(options = {}) {
+    options = {...this.props.fetchOptions, ...options};
+
     if (this.isMounted()) {
-      this.setState({
-        isRefreshing: true,
-      });
+      this.refs.refreshControl.setIsRefreshing(true);
       this._setPage(1);
       this.refreshedAt = new Date;
       let page = this._getPage();
@@ -271,8 +274,9 @@ var GiftedListView = React.createClass({
 
   //Configure props for `onFetch`, `fetchOptions` and 'rows' to declaratively change the rows displayed.
   //`onFetch` should now be used to dispatch a redux action, which reduces the `rows` prop :)
-  componentWillReceiveProps(nextProps, nextState) {
+  shouldComponentUpdate(nextProps, nextState) {
     let rows = nextProps.rows;
+    let shouldUpdate = true;
 
     if(rows !== this.props.rows) {
       if(this.beforeOptions && this.beforeOptions.paginatedFetch) {
@@ -286,16 +290,31 @@ var GiftedListView = React.createClass({
           this._postRefresh(rows, this.beforeOptions);
         }, delay);
       }
+
+      shouldUpdate = false;
     }
 
     //allow for declaratively refreshing simply by changing fetchOptions,
     //which will then call `onFetch` and if done right will result in new `rows` props, i.e. the above code.
-    else if(JSON.stringify(nextProps.fetchOptions) !== JSON.stringify(this.props.fetchOptions)) {
+    else if(nextProps.fetchOptions !== this.props.fetchOptions) {
       this.refresh(nextProps.fetchOptions);
+      shouldUpdate = false;
+      return false;
     }
 
     this.beforeOptions = {};
+    return shouldUpdate ? shallowCompare(this, nextProps, nextState) : false;
   },
+
+  shouldComponentUpdateOld(nextProps, nextState) {
+    if(nextProps.fetchOptions !== this.props.fetchOptions && nextProps.rows === this.props.rows) {
+      this.refresh(nextProps.fetchOptions);
+      return false;
+    }
+
+    return shallowCompare(this, nextProps, nextState);
+  },
+
 
   _postRefresh(rows = [], options = {}) {
     if (this.isMounted()) {
@@ -305,7 +324,6 @@ var GiftedListView = React.createClass({
 
   _updateRows(rows = [], options = {}) {
     let state = {
-      isRefreshing: false,
       paginationStatus: (options.allLoaded === true || rows.length === 0 ? 'allLoaded' : 'waiting'),
     };
 
@@ -322,6 +340,7 @@ var GiftedListView = React.createClass({
     }
 
     this.setState(state, this.props.onRefresh);
+    this.refs.refreshControl.setIsRefreshing(false);
 
     //this must be fired separately or iOS will call onEndReached 2-3 additional times as
     //the ListView is filled. So instead we rely on React's rendering to cue this task
@@ -421,9 +440,9 @@ var GiftedListView = React.createClass({
       return this.props.renderRefreshControl({ onRefresh: this._onRefresh });
     }
     return (
-      <RefreshControl
+      <RefreshControlWithState
+        ref='refreshControl'
         onRefresh={this._onRefresh}
-        refreshing={this.state.isRefreshing}
         colors={this.props.refreshableColors}
         progressBackgroundColor={this.props.refreshableProgressBackgroundColor}
         size={this.props.refreshableSize}
@@ -503,3 +522,25 @@ var GiftedListView = React.createClass({
 
 
 module.exports = GiftedListView;
+
+
+
+class RefreshControlWithState extends React.Component {
+  constructor(props, context) {
+    super(props, context);
+    this.state = {isRefreshing: false};
+  }
+
+  setIsRefreshing(isRefreshing) {
+    this.setState({isRefreshing});
+  }
+
+  render() {
+    return (
+      <RefreshControl
+        {...this.props}
+        refreshing={this.state.isRefreshing}
+      />
+    );
+  }
+}
