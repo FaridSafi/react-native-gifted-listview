@@ -9,7 +9,11 @@ var {
   View,
   Text,
   RefreshControl,
+  ScrollView,
 } = React;
+
+import shallowCompare from 'react-addons-shallow-compare';
+
 
 
 // small helper function which merged two objects into one
@@ -36,6 +40,8 @@ var GiftedListView = React.createClass({
     return {
       customStyles: {},
       initialListSize: 10,
+      onEndReachedThreshold: 100,
+      onEndReachedEventThrottle: 1000,
       firstLoader: true,
       pagination: true,
       refreshable: true,
@@ -49,6 +55,7 @@ var GiftedListView = React.createClass({
       sectionHeaderView: null,
       scrollEnabled: true,
       withSections: false,
+      autoPaginate: false,
       onFetch(page, callback, options) { callback([]); },
 
       paginationFetchingView: null,
@@ -56,12 +63,17 @@ var GiftedListView = React.createClass({
       paginationWaitingView: null,
       emptyView: null,
       renderSeparator: null,
+
+      rows: null,
+      fetchOptions: null,
     };
   },
 
   propTypes: {
     customStyles: React.PropTypes.object,
     initialListSize: React.PropTypes.number,
+    onEndReachedThreshold: React.PropTypes.number,
+    onEndReachedEventThrottle: React.PropTypes.number,
     firstLoader: React.PropTypes.bool,
     pagination: React.PropTypes.bool,
     refreshable: React.PropTypes.bool,
@@ -75,6 +87,7 @@ var GiftedListView = React.createClass({
     sectionHeaderView: React.PropTypes.func,
     scrollEnabled: React.PropTypes.bool,
     withSections: React.PropTypes.bool,
+    autoPaginate: React.PropTypes.bool,
     onFetch: React.PropTypes.func,
 
     paginationFetchingView: React.PropTypes.func,
@@ -82,6 +95,9 @@ var GiftedListView = React.createClass({
     paginationWaitingView: React.PropTypes.func,
     emptyView: React.PropTypes.func,
     renderSeparator: React.PropTypes.func,
+
+    rows: React.PropTypes.array,
+    fetchOptions: React.PropTypes.object,
   },
 
   _setPage(page) { this._page = page; },
@@ -197,26 +213,108 @@ var GiftedListView = React.createClass({
   },
 
   componentDidMount() {
-    this.props.onFetch(this._getPage(), this._postRefresh, {firstLoad: true});
+    window.gifted = this;
+    this._fetch(this._getPage(), {firstLoad: true});
+
+    //imperative OOP state utilized since onEndReached is imperatively called. So why waste cycles on rendering, which
+    //can cause loss of frames in animation.
+    this.lastGrantAt = this.lastReleaseAt = this.lastEndReachedAt = this.lastManualRefreshAt = this.lastPaginateUpdateAt = new Date;
   },
 
   setNativeProps(props) {
     this.refs.listview.setNativeProps(props);
   },
 
-  _refresh() {
-    this._onRefresh({external: true});
+  scrollTo(config) {
+    this.refs.listview.scrollTo(config);
+  },
+
+  //open up `refresh` as a public API
+  refresh(options) {
+    return this._refresh(options);
+  },
+
+  _refresh(options) {
+    this.lastManualRefreshAt = new Date; //can trigger scrollview to push past endReached threshold if you are already scrolled down when you call this
+
+    this._onRefresh(Object.assign({
+      external: true,
+      mustSetLastManualRefreshAt: true, //we pass it along, so when the rows are updated we know to store the date as well
+    }, options));
+
+    this.scrollTo({y: 0}); //refreshing may be triggered by new fetchOptions while scrolled down, which should trigger scrolling to the top
   },
 
   _onRefresh(options = {}) {
+    options = {...this.props.fetchOptions, ...options};
+
     if (this.isMounted()) {
-      this.setState({
-        isRefreshing: true,
-      });
+      this.refs.refreshControl.setIsRefreshing(true);
       this._setPage(1);
-      this.props.onFetch(this._getPage(), this._postRefresh, options);
+      this.refreshedAt = new Date;
+      let page = this._getPage();
+      this._fetch(page, options);
     }
   },
+
+  //The refactoring was done solely so we can pass `beforeOptions` along
+  //and insure such things as `lastManualRefreshAt` are passed to client code and back to our `_updateRows` method.
+  //But I think this could be useful for any data we want to pass to developers and guarantee comes back to us.
+  _fetch(page, beforeOptions, postCallback) {
+    postCallback = postCallback || this._postRefresh;
+
+    Object.assign({}, beforeOptions, this.props.fetchOptions); //any fetch options will be passed along to `props.onFetch` in order to use for async queries
+
+    this.beforeOptions = beforeOptions; //will be used by componentWillReceive props; parent components only need to provide rows
+
+    this.props.onFetch(page, (rows, options) => {
+      postCallback(rows, Object.assign(beforeOptions, options));
+    }, beforeOptions);
+  },
+
+  //Configure props for `onFetch`, `fetchOptions` and 'rows' to declaratively change the rows displayed.
+  //`onFetch` should now be used to dispatch a redux action, which reduces the `rows` prop :)
+  shouldComponentUpdate(nextProps, nextState) {
+    let rows = nextProps.rows;
+    let shouldUpdate = true;
+
+    if(rows !== this.props.rows) {
+      if(this.beforeOptions && this.beforeOptions.paginatedFetch) {
+        this._postPaginate(rows, {...this.beforeOptions, allLoaded: nextProps.allLoaded});
+      }
+      else {
+        let timeSinceRefresh = new Date - this.refreshedAt;                //make sure at least 1 second goes by before hiding refresh control,
+        let delay = timeSinceRefresh > 1000 ? 0 : 1000 - timeSinceRefresh; //or otherwise it will stick to its open position
+
+        setTimeout(() => {
+          this._postRefresh(rows, this.beforeOptions);
+        }, delay);
+      }
+
+      shouldUpdate = false;
+    }
+
+    //allow for declaratively refreshing simply by changing fetchOptions,
+    //which will then call `onFetch` and if done right will result in new `rows` props, i.e. the above code.
+    else if(nextProps.fetchOptions !== this.props.fetchOptions) {
+      this.refresh(nextProps.fetchOptions);
+      shouldUpdate = false;
+      return false;
+    }
+
+    this.beforeOptions = {};
+    return shouldUpdate ? shallowCompare(this, nextProps, nextState) : false;
+  },
+
+  shouldComponentUpdateOld(nextProps, nextState) {
+    if(nextProps.fetchOptions !== this.props.fetchOptions && nextProps.rows === this.props.rows) {
+      this.refresh(nextProps.fetchOptions);
+      return false;
+    }
+
+    return shallowCompare(this, nextProps, nextState);
+  },
+
 
   _postRefresh(rows = [], options = {}) {
     if (this.isMounted()) {
@@ -224,58 +322,111 @@ var GiftedListView = React.createClass({
     }
   },
 
+  _updateRows(rows = [], options = {}) {
+    let state = {
+      paginationStatus: (options.allLoaded === true || rows.length === 0 ? 'allLoaded' : 'waiting'),
+    };
+
+    if(options.mustSetLastManualRefreshAt) this.lastManualRefreshAt = new Date;
+
+    if (rows !== null) {
+      this._setRows(rows);
+
+      if (this.props.withSections === true) {
+        state.dataSource = this.state.dataSource.cloneWithRowsAndSections(rows);
+      } else {
+        state.dataSource = this.state.dataSource.cloneWithRows(rows);
+      }
+    }
+
+    this.setState(state, this.props.onRefresh);
+    this.refs.refreshControl.setIsRefreshing(false);
+
+    //this must be fired separately or iOS will call onEndReached 2-3 additional times as
+    //the ListView is filled. So instead we rely on React's rendering to cue this task
+    //until after the previous state is filled and the ListView rendered. After that,
+    //onEndReached callbacks will fire. See onEndReached() above.
+    if(!this.firstLoadCompleteAt) this.firstLoadCompleteAt = new Date;
+  },
+
+  onEndReached() {
+    //firstLoadCompleteAte prevents any onEndReached firings in initial rendering. There is usuallyl 2 such firings you don't want.
+    if(!this.firstLoadCompleteAt || new Date - this.firstLoadCompleteAt < 1000) return;
+
+    //lastPaginateUpdateAt solves the issue where paginationView's disappearing trigger onEndReached.
+    //This happens when you're near the end of the page and the dissapperance of the pagination view
+    //triggers onEndReached. The timing is so small so as not to disrupt other regular scrolling behavior.
+    if(new Date - this.lastPaginateUpdateAt < 300) return;
+
+    //lastManualRefreshAt handles the case where you call _refresh(), which if you do while the page is near the end
+    //will trigger onEndReached even though you just moments ago manually refreshed.
+    if(new Date - this.lastManualRefreshAt < 300) return;
+
+    //Here's the bread and butter of strong event firing management in regards to when the user in fact does want lots of pagination refreshes:
+
+    //The base case is simply lastEndReachedAt, which very easily can fire, so we want to block that while still allowing for
+    //fast scrolling. If you scroll to the end of the page again within one second (fast scrolling), it will know you want more based
+    //on lastReleasedAt (you will have to have released multiple times to scroll fast). lastGrantAt is for if you have short rows
+    //and/or a low # of rows per page and you're able to move to the end without even releasing your finger.
+    if(new Date - this.lastEndReachedAt < (this.props.onEndReachedEventThrottle || 1000)) {
+      if(new Date - this.lastGrantAt < 3000) return; //we can likely lower this number,
+      if(new Date - this.lastReleaseAt < 3000) return; //or make it configurable via props, but I think making it configurable will be unwanted added complexity for client developers
+    }
+
+    this.lastEndReachedAt = new Date;
+
+
+    if (this.props.autoPaginate) {
+      this._onPaginate();
+    }
+    if (this.props.onEndReached) {
+      this.props.onEndReached();
+    }
+  },
+
+
+  onResponderGrant() {
+    this.lastGrantAt = new Date;
+  },
+  onResponderRelease() {
+    this.lastReleaseAt = new Date;
+  },
   _onPaginate() {
-    if(this.state.paginationStatus==='allLoaded'){
-      return null
-    }else {
-      this.setState({
-        paginationStatus: 'fetching',
-      });
-      this.props.onFetch(this._getPage() + 1, this._postPaginate, {});
+    if (this.state.paginationStatus === 'firstLoad' || this.state.paginationStatus === 'waiting') {
+      this.setState({paginationStatus: 'fetching'});
+      this._fetch(this._getPage() + 1, {paginatedFetch: true}, this._postPaginate);
     }
   },
 
   _postPaginate(rows = [], options = {}) {
     this._setPage(this._getPage() + 1);
+
     var mergedRows = null;
+
     if (this.props.withSections === true) {
       mergedRows = MergeRecursive(this._getRows(), rows);
     } else {
-      mergedRows = this._getRows().concat(rows);
+      if(this.props.dontConcat) {
+        mergedRows = rows; //because rows are already concatenated for use in a Redux store that needs access to all rows
+      }
+      else {
+        mergedRows = this._getRows().concat(rows);
+      }
     }
+
+    this.lastPaginateUpdateAt = new Date;
+
     this._updateRows(mergedRows, options);
   },
 
-  _updateRows(rows = [], options = {}) {
-    if (rows !== null) {
-      this._setRows(rows);
-      if (this.props.withSections === true) {
-        this.setState({
-          dataSource: this.state.dataSource.cloneWithRowsAndSections(rows),
-          isRefreshing: false,
-          paginationStatus: (options.allLoaded === true ? 'allLoaded' : 'waiting'),
-        });
-      } else {
-        this.setState({
-          dataSource: this.state.dataSource.cloneWithRows(rows),
-          isRefreshing: false,
-          paginationStatus: (options.allLoaded === true ? 'allLoaded' : 'waiting'),
-        });
-      }
-    } else {
-      this.setState({
-        isRefreshing: false,
-        paginationStatus: (options.allLoaded === true ? 'allLoaded' : 'waiting'),
-      });
-    }
-  },
-
   _renderPaginationView() {
-    if ((this.state.paginationStatus === 'fetching' && this.props.pagination === true) || (this.state.paginationStatus === 'firstLoad' && this.props.firstLoader === true)) {
+    let paginationEnabled = this.props.pagination === true || this.props.autoPaginate === true;
+
+    if ((this.state.paginationStatus === 'fetching' && paginationEnabled) || (this.state.paginationStatus === 'firstLoad' && this.props.firstLoader === true)) {
       return this.paginationFetchingView();
-    } else if (this.state.paginationStatus === 'waiting' && this.props.pagination === true && (this.props.withSections === true || this._getRows().length > 0)) {
+    } else if (this.state.paginationStatus === 'waiting' && this.props.pagination === true && (this.props.withSections === true || this._getRows().length > 0)) { //never show waiting for autoPaginate
       return this.paginationWaitingView(this._onPaginate);
-    } else if (this.state.paginationStatus === 'allLoaded' && this.props.pagination === true) {
+    } else if (this.state.paginationStatus === 'allLoaded' && paginationEnabled) {
       return this.paginationAllLoadedView();
     } else if (this._getRows().length === 0) {
       return this.emptyView(this._onRefresh);
@@ -289,9 +440,9 @@ var GiftedListView = React.createClass({
       return this.props.renderRefreshControl({ onRefresh: this._onRefresh });
     }
     return (
-      <RefreshControl
+      <RefreshControlWithState
+        ref='refreshControl'
         onRefresh={this._onRefresh}
-        refreshing={this.state.isRefreshing}
         colors={this.props.refreshableColors}
         progressBackgroundColor={this.props.refreshableProgressBackgroundColor}
         size={this.props.refreshableSize}
@@ -311,6 +462,24 @@ var GiftedListView = React.createClass({
         renderHeader={this.headerView}
         renderFooter={this._renderPaginationView}
         renderSeparator={this.renderSeparator}
+
+        onResponderGrant={this.onResponderGrant}
+        //onResponderMove={this.onResponderMove}
+        onResponderRelease={this.onResponderRelease}
+        //onMomentumScrollEnd={this.onMomentumScrollEnd}
+
+        //check out this thread: https://github.com/facebook/react-native/issues/1410
+        //and this stackoverflow post: http://stackoverflow.com/questions/33350556/how-to-get-onpress-event-from-scrollview-component-in-react-native
+        //basically onScrollAnimationEnd is incorrect (onMomentumScrollEnd is the right one) and all the native event callbacks
+        //are available, but no documented. Often times library developers do not want to build
+        //on top of such things. But my opinion in this case obviously is we should. The responderRelease code in call edonEndReached() is extremely stable and clear.
+        //I am willing to maintain this for a while, so in the rare case these become available,
+        //I will find something out. In all likelihood, only better APIs that are closer
+        //to our precise needs and do not require all this still will become available. When they do, I will implement them. But at the same timeout
+        //I find it unlikely that PanResponder methods that ScrollViews are based on will disappear, even if they remain undocumented for a long time.
+
+        onEndReached={this.onEndReached}
+        onEndReachedThreshold={this.props.onEndReachedThreshold || 100} //new useful prop, yay!
 
         automaticallyAdjustContentInsets={false}
         scrollEnabled={this.props.scrollEnabled}
@@ -353,3 +522,25 @@ var GiftedListView = React.createClass({
 
 
 module.exports = GiftedListView;
+
+
+
+class RefreshControlWithState extends React.Component {
+  constructor(props, context) {
+    super(props, context);
+    this.state = {isRefreshing: false};
+  }
+
+  setIsRefreshing(isRefreshing) {
+    this.setState({isRefreshing});
+  }
+
+  render() {
+    return (
+      <RefreshControl
+        {...this.props}
+        refreshing={this.state.isRefreshing}
+      />
+    );
+  }
+}
