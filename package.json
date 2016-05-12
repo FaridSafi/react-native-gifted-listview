@@ -1,6 +1,6 @@
 {
   "name": "react-native-gifted-listview",
-  "version": "0.0.14",
+  "version": "0.0.15",
   "description": "A ListView with pull-to-refresh, infinite scrolling and more for Android and iOS React-Native apps",
   "main": "GiftedListView.js",
   "scripts": {
