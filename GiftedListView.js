@@ -1,6 +1,6 @@
 'use strict'
 
-var React = require('react-native');
+var React = require('react');
 
 var {
   ListView,
@@ -9,7 +9,7 @@ var {
   View,
   Text,
   RefreshControl,
-} = React;
+} = require('react-native');
 
 
 // small helper function which merged two objects into one

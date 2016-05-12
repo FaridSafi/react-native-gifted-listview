@@ -27,6 +27,6 @@
   },
   "homepage": "https://github.com/FaridSafi/react-native-gifted-listview#readme",
   "dependencies": {
-    "react-native-gifted-spinner": "^0.0.3"
+    "react-native-gifted-spinner": "^0.0.4"
   }
 }

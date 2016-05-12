@@ -4,10 +4,9 @@
  */
 'use strict';
 
-var React = require('react-native');
 var {
   AppRegistry
-} = React;
+} = require('react-native');
 
 var Example = require('./example_advanced.js');
 
