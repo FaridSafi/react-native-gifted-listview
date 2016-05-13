@@ -307,13 +307,13 @@ var GiftedListView = React.createClass({
 
   _postRefresh(rows = [], options = {}) {
     if (this.isMounted()) {
-      this._updateRows(rows, options);
+      this._updateRows(rows, options, true);
     }
   },
 
-  _updateRows(rows = [], options = {}) {
+  _updateRows(rows = [], options = {}, isRefresh=false) {
     let state = {
-      paginationStatus: (options.allLoaded === true || rows.length % this.props.limit !== 0 || this._prevRowsLength === rows.length ? 'allLoaded' : 'waiting'),
+      paginationStatus: (options.allLoaded === true || rows.length % this.props.limit !== 0 || (this._prevRowsLength === rows.length && !isRefresh) ? 'allLoaded' : 'waiting'),
     };
 
     this._prevRowsLength = rows.length;
