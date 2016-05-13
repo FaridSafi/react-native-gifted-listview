@@ -213,7 +213,7 @@ var GiftedListView = React.createClass({
   },
 
   componentDidMount() {
-    this._fetch(this._getPage(), {firstLoad: true, ...this.props.fetchOptions});
+    //this._fetch(this._getPage(), {firstLoad: true, ...this.props.fetchOptions});
 
     //imperative OOP state utilized since onEndReached is imperatively called. So why waste cycles on rendering, which
     //can cause loss of frames in animation.
@@ -313,8 +313,10 @@ var GiftedListView = React.createClass({
 
   _updateRows(rows = [], options = {}) {
     let state = {
-      paginationStatus: (options.allLoaded === true || rows.length % this.props.limit !== 0 ? 'allLoaded' : 'waiting'),
+      paginationStatus: (options.allLoaded === true || rows.length % this.props.limit !== 0 || this._prevRowsLength === rows.length ? 'allLoaded' : 'waiting'),
     };
+
+    this._prevRowsLength = rows.length;
 
     if(options.mustSetLastManualRefreshAt) this.lastManualRefreshAt = new Date;
 
