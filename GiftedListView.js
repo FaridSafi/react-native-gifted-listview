@@ -213,8 +213,7 @@ var GiftedListView = React.createClass({
   },
 
   componentDidMount() {
-    window.gifted = this;
-    this._fetch(this._getPage(), {firstLoad: true});
+    this._fetch(this._getPage(), {firstLoad: true, ...this.props.fetchOptions});
 
     //imperative OOP state utilized since onEndReached is imperatively called. So why waste cycles on rendering, which
     //can cause loss of frames in animation.
@@ -263,8 +262,6 @@ var GiftedListView = React.createClass({
   _fetch(page, beforeOptions, postCallback) {
     postCallback = postCallback || this._postRefresh;
 
-    Object.assign({}, beforeOptions, this.props.fetchOptions); //any fetch options will be passed along to `props.onFetch` in order to use for async queries
-
     this.beforeOptions = beforeOptions; //will be used by componentWillReceive props; parent components only need to provide rows
 
     this.props.onFetch(page, (rows, options) => {
@@ -280,7 +277,9 @@ var GiftedListView = React.createClass({
 
     if(rows !== this.props.rows) {
       if(this.beforeOptions && this.beforeOptions.paginatedFetch) {
-        this._postPaginate(rows, {...this.beforeOptions, allLoaded: nextProps.allLoaded});
+        setTimeout(() => {
+          this._postPaginate(rows, {...this.beforeOptions, allLoaded: nextProps.allLoaded});
+        }, 1000);
       }
       else {
         let timeSinceRefresh = new Date - this.refreshedAt;                //make sure at least 1 second goes by before hiding refresh control,
@@ -298,21 +297,11 @@ var GiftedListView = React.createClass({
     //which will then call `onFetch` and if done right will result in new `rows` props, i.e. the above code.
     else if(nextProps.fetchOptions !== this.props.fetchOptions) {
       this.refresh(nextProps.fetchOptions);
-      shouldUpdate = false;
       return false;
     }
 
     this.beforeOptions = {};
     return shouldUpdate ? shallowCompare(this, nextProps, nextState) : false;
-  },
-
-  shouldComponentUpdateOld(nextProps, nextState) {
-    if(nextProps.fetchOptions !== this.props.fetchOptions && nextProps.rows === this.props.rows) {
-      this.refresh(nextProps.fetchOptions);
-      return false;
-    }
-
-    return shallowCompare(this, nextProps, nextState);
   },
 
 
@@ -324,7 +313,7 @@ var GiftedListView = React.createClass({
 
   _updateRows(rows = [], options = {}) {
     let state = {
-      paginationStatus: (options.allLoaded === true || rows.length === 0 ? 'allLoaded' : 'waiting'),
+      paginationStatus: (options.allLoaded === true || rows.length % this.props.limit !== 0 ? 'allLoaded' : 'waiting'),
     };
 
     if(options.mustSetLastManualRefreshAt) this.lastManualRefreshAt = new Date;
@@ -392,9 +381,11 @@ var GiftedListView = React.createClass({
     this.lastReleaseAt = new Date;
   },
   _onPaginate() {
+    if(this.state.paginationStatus === 'allLoaded') return;
+
     if (this.state.paginationStatus === 'firstLoad' || this.state.paginationStatus === 'waiting') {
       this.setState({paginationStatus: 'fetching'});
-      this._fetch(this._getPage() + 1, {paginatedFetch: true}, this._postPaginate);
+      this._fetch(this._getPage() + 1, {paginatedFetch: true, ...this.props.fetchOptions}, this._postPaginate);
     }
   },
 
