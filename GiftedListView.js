@@ -188,6 +188,7 @@ var GiftedListView = React.createClass({
   getInitialState() {
     this._setPage(1);
     this._setRows([]);
+    this.refreshedAt = new Date;
 
     var ds = null;
     if (this.props.withSections === true) {
@@ -213,7 +214,11 @@ var GiftedListView = React.createClass({
   },
 
   componentDidMount() {
-    //this._fetch(this._getPage(), {firstLoad: true, ...this.props.fetchOptions});
+    //if(this.props.rows) {
+    //  this._postRefresh(this.props.rows, this.beforeOptions);
+    //}
+
+    this._fetch(this._getPage(), {firstLoad: true, ...this.props.fetchOptions});
 
     //imperative OOP state utilized since onEndReached is imperatively called. So why waste cycles on rendering, which
     //can cause loss of frames in animation.
@@ -313,7 +318,7 @@ var GiftedListView = React.createClass({
 
   _updateRows(rows = [], options = {}, isRefresh=false) {
     let state = {
-      paginationStatus: (options.allLoaded === true || rows.length % this.props.limit !== 0 || (this._prevRowsLength === rows.length && !isRefresh) ? 'allLoaded' : 'waiting'),
+      paginationStatus: (options.allLoaded === true || rows.length === 0 || rows.length % this.props.limit !== 0 || (this._prevRowsLength === rows.length && !isRefresh || (this.props.limit && rows.length < this.props.limit)) ? 'allLoaded' : 'waiting'),
     };
 
     this._prevRowsLength = rows.length;
