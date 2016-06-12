@@ -34,7 +34,8 @@ var Example = React.createClass({
    * Should be replaced by your own logic
    * @param {number} page Requested page to fetch
    * @param {function} callback Should pass the rows
-   * @param {object} options Inform if first load
+   * @param {object} options indicates different actions that trigger refreshing
+   *        options: [firstLoad || refresh || paginate || allLoaded]
    */
   _onFetch(page = 1, callback, options) {
     setTimeout(() => {
@@ -42,7 +43,7 @@ var Example = React.createClass({
       if (page === 3) {
         callback(rows, {
           allLoaded: true, // the end of the list is reached
-        });        
+        });
       } else {
         callback(rows);
       }
@@ -68,7 +69,7 @@ var Example = React.createClass({
         style={styles.row}
         underlayColor='#c8c7cc'
         onPress={() => this._onPress(rowData)}
-      >  
+      >
         <Text>{rowData}</Text>
       </TouchableHighlight>
     );
