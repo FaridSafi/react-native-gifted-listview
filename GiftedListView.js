@@ -57,6 +57,9 @@ var GiftedListView = React.createClass({
       renderSeparator: null,
       rowHasChanged:null,
       distinctRows:null,
+
+      spinnerSize: 'small',
+      spinnerColor: 'gray',
     };
   },
 
@@ -86,6 +89,9 @@ var GiftedListView = React.createClass({
 
     rowHasChanged:React.PropTypes.func,
     distinctRows:React.PropTypes.func,
+
+    spinnerSize: React.PropTypes.string,
+    spinnerColor: React.PropTypes.string,
   },
 
   _setPage(page) { this._page = page; },
@@ -101,7 +107,11 @@ var GiftedListView = React.createClass({
 
     return (
       <View style={[this.defaultStyles.paginationView, this.props.customStyles.paginationView]}>
-        <ActivityIndicator />
+        <ActivityIndicator
+            animating={true}
+            size={this.props.spinnerSize}
+            color={this.props.spinnerColor}
+        />
       </View>
     );
   },
