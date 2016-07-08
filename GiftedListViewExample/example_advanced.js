@@ -17,7 +17,7 @@ var GiftedListView = require('react-native-gifted-listview');
 var GiftedSpinner = require('react-native-gifted-spinner');
 
 var Example = React.createClass({
-  
+
   /**
    * Will be called when refreshing
    * Should be replaced by your own logic
@@ -33,14 +33,14 @@ var Example = React.createClass({
       if (page === 5) {
         callback(rows, {
           allLoaded: true, // the end of the list is reached
-        });        
+        });
       } else {
         callback(rows);
       }
     }, 1000); // simulating network fetching
   },
-  
-  
+
+
   /**
    * When a row is touched
    * @param {object} rowData Row data
@@ -48,18 +48,18 @@ var Example = React.createClass({
   _onPress(rowData) {
     console.log(rowData+' pressed');
   },
-  
+
   /**
    * Render a row
    * @param {object} rowData Row data
    */
   _renderRowView(rowData) {
     return (
-      <TouchableHighlight 
-        style={customStyles.row} 
+      <TouchableHighlight
+        style={customStyles.row}
         underlayColor='#c8c7cc'
         onPress={() => this._onPress(rowData)}
-      >  
+      >
         <Text>{rowData}</Text>
       </TouchableHighlight>
     );
@@ -78,7 +78,7 @@ var Example = React.createClass({
       </View>
     );
   },
-  
+
   /**
    * Render the refreshable view when waiting for refresh
    * On Android, the view should be touchable to trigger the refreshCallback
@@ -95,7 +95,7 @@ var Example = React.createClass({
       );
     } else {
       return (
-        <TouchableHighlight 
+        <TouchableHighlight
           underlayColor='#c8c7cc'
           onPress={refreshCallback}
           style={customStyles.refreshableView}
@@ -132,14 +132,14 @@ var Example = React.createClass({
       </View>
     );
   },
-  
+
   /**
    * Render the pagination view when waiting for touch
    * @param {function} paginateCallback The function to call to load more rows
    */
   _renderPaginationWaitingView(paginateCallback) {
     return (
-      <TouchableHighlight 
+      <TouchableHighlight
         underlayColor='#c8c7cc'
         onPress={paginateCallback}
         style={customStyles.paginationView}
@@ -150,7 +150,7 @@ var Example = React.createClass({
       </TouchableHighlight>
     );
   },
-  
+
   /**
    * Render the pagination view when fetching
    */
@@ -161,7 +161,7 @@ var Example = React.createClass({
       </View>
     );
   },
-  
+
   /**
    * Render the pagination view when end of list is reached
    */
@@ -174,7 +174,7 @@ var Example = React.createClass({
       </View>
     );
   },
-  
+
   /**
    * Render a view when there is no row to display at the first fetch
    * @param {function} refreshCallback The function to call to refresh the listview
@@ -185,8 +185,8 @@ var Example = React.createClass({
         <Text style={customStyles.defaultViewTitle}>
           Sorry, there is no content to display
         </Text>
-        
-        <TouchableHighlight 
+
+        <TouchableHighlight
           underlayColor='#c8c7cc'
           onPress={refreshCallback}
         >
@@ -197,7 +197,7 @@ var Example = React.createClass({
       </View>
     );
   },
-  
+
   /**
    * Render a separator between rows
    */
@@ -206,7 +206,7 @@ var Example = React.createClass({
       <View style={customStyles.separator} />
     );
   },
-  
+
   render() {
     return (
       <View style={screenStyles.container}>
@@ -215,12 +215,12 @@ var Example = React.createClass({
         </View>
         <GiftedListView
           rowView={this._renderRowView}
-          
+
           onFetch={this._onFetch}
           initialListSize={12} // the maximum number of rows displayable without scrolling (height of the listview / height of row)
 
           firstLoader={true} // display a loader for the first fetching
-      
+
           pagination={true} // enable infinite scrolling using touch to load more
           paginationFetchigView={this._renderPaginationFetchigView}
           paginationAllLoadedView={this._renderPaginationAllLoadedView}
@@ -232,17 +232,34 @@ var Example = React.createClass({
           refreshableFetchingView={this._renderRefreshableFetchingView}
           refreshableWillRefreshView={this._renderRefreshableWillRefreshView}
           refreshableWaitingView={this._renderRefreshableWaitingView}
-          
+
           emptyView={this._renderEmptyView}
-          
+
           renderSeparator={this._renderSeparatorView}
-          
+
           withSections={true} // enable sections
           sectionHeaderView={this._renderSectionHeaderView}
-          
+
           PullToRefreshViewAndroidProps={{
             colors: ['#fff'],
             progressBackgroundColor: '#003e82',
+          }}
+
+          rowHasChanged={(r1,r2)=>{
+            r1.id !== r2.id
+          }}
+          distinctRows={(rows)=>{
+            var indentitis = {};
+            var newRows = [];
+            for(var i = 0;i<rows.length; i++){
+              if(indentitis[rows[i].id]){
+
+              }else{
+                indentitis[rows[i].id]=true;
+                newRows.push(rows[i]);
+              }
+            }
+            return newRows;
           }}
         />
       </View>
