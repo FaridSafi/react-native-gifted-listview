@@ -252,7 +252,7 @@ var GiftedListView = React.createClass({
     if(this.props.distinctRows){
       mergedRows = this.props.distinctRows(mergedRows);
     }
-    
+
     this._updateRows(mergedRows, options);
   },
 
@@ -305,6 +305,7 @@ var GiftedListView = React.createClass({
         colors={this.props.refreshableColors}
         progressBackgroundColor={this.props.refreshableProgressBackgroundColor}
         size={this.props.refreshableSize}
+        style={this.props.refreshableStyle}
         tintColor={this.props.refreshableTintColor}
         title={this.props.refreshableTitle}
       />
