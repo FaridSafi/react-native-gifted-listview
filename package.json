@@ -8,7 +8,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/FaridSafi/react-native-gifted-listview.git"
+    "url": "git+https://github.com/mcconkiee/react-native-gifted-listview.git"
   },
   "keywords": [
     "pull-to-refresh",
@@ -23,10 +23,7 @@
   "author": "Farid from Safi",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/FaridSafi/react-native-gifted-listview/issues"
+    "url": "https://github.com/mcconkiee/react-native-gifted-listview/issues"
   },
-  "homepage": "https://github.com/FaridSafi/react-native-gifted-listview#readme",
-  "dependencies": {
-    "react-native-gifted-spinner": "https://github.com/mcconkiee/react-native-gifted-spinner/tarball/master"
-  }
+  "homepage": "https://github.com/mcconkiee/react-native-gifted-listview#readme"  
 }
