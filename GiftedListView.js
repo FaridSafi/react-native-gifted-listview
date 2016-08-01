@@ -9,6 +9,7 @@ var {
   View,
   Text,
   RefreshControl,
+  InteractionManager,
 } = require('react-native');
 
 
@@ -202,7 +203,9 @@ var GiftedListView = React.createClass({
   },
 
   componentDidMount() {
-    this.props.onFetch(this._getPage(), this._postRefresh, {firstLoad: true});
+    InteractionManager.runAfterInteractions(() => {
+      this.props.onFetch(this._getPage(), this._postRefresh, {firstLoad: true});
+    });
   },
 
   setNativeProps(props) {
