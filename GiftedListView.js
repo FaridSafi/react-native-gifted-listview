@@ -204,6 +204,11 @@ var GiftedListView = React.createClass({
   componentDidMount() {
     this.props.onFetch(this._getPage(), this._postRefresh, {firstLoad: true});
   },
+  //state change refresh
+  componentWillReceiveProps(){
+		this._setPage(1);
+   	this.props.onFetch(this._getPage(), this._postRefresh, {firstLoad:true});
+ 	},
 
   setNativeProps(props) {
     this.refs.listview.setNativeProps(props);
@@ -252,7 +257,7 @@ var GiftedListView = React.createClass({
     if(this.props.distinctRows){
       mergedRows = this.props.distinctRows(mergedRows);
     }
-    
+
     this._updateRows(mergedRows, options);
   },
 
