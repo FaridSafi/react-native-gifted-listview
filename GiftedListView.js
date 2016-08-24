@@ -9,6 +9,7 @@ var {
   View,
   Text,
   RefreshControl,
+  ActivityIndicator,
 } = require('react-native');
 
 
@@ -23,8 +24,6 @@ function MergeRowsWithHeaders(obj1, obj2) {
   }
   return obj1;
 }
-
-var GiftedSpinner = require('react-native-gifted-spinner');
 
 var GiftedListView = React.createClass({
 
@@ -98,7 +97,7 @@ var GiftedListView = React.createClass({
 
     return (
       <View style={[this.defaultStyles.paginationView, this.props.customStyles.paginationView]}>
-        <GiftedSpinner />
+        <ActivityIndicator animating={true} size="small"/>
       </View>
     );
   },
