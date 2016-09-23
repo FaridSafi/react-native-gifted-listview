@@ -7,7 +7,6 @@
   },
   "dependencies": {
     "react-native": "^0.17.0",
-    "react-native-gifted-listview": "0.0.7",
-    "react-native-gifted-spinner": "0.0.3"
+    "react-native-gifted-listview": "0.0.7"
   }
 }

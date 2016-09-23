@@ -25,8 +25,5 @@
   "bugs": {
     "url": "https://github.com/FaridSafi/react-native-gifted-listview/issues"
   },
-  "homepage": "https://github.com/FaridSafi/react-native-gifted-listview#readme",
-  "dependencies": {
-    "react-native-gifted-spinner": "^0.0.4"
-  }
+  "homepage": "https://github.com/FaridSafi/react-native-gifted-listview#readme"
 }
