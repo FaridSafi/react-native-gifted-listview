@@ -202,8 +202,8 @@ var GiftedListView = React.createClass({
     this.props.onFetch(this._getPage(), this._postRefresh, {firstLoad: true});
   },
 
-  componentWillReceiveProps() {
-    if (this.props.forceUpdate) {
+  componentWillReceiveProps(nextProps) {
+    if (nextProps.forceUpdate){
       this.setState({
         isRefreshing: true,
       });
