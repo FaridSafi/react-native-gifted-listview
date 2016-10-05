@@ -204,9 +204,6 @@ var GiftedListView = React.createClass({
 
   componentWillReceiveProps(nextProps) {
     if (nextProps.forceUpdate){
-      this.setState({
-        isRefreshing: true,
-      });
       this._setPage(1);
       this.props.onFetch(this._getPage(), this._postRefresh, {});
     }
