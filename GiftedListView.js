@@ -63,6 +63,7 @@ var GiftedListView = React.createClass({
 
   propTypes: {
     customStyles: React.PropTypes.object,
+    contentContainerStyle: React.PropTypes.object,
     initialListSize: React.PropTypes.number,
     firstLoader: React.PropTypes.bool,
     pagination: React.PropTypes.bool,
@@ -252,7 +253,7 @@ var GiftedListView = React.createClass({
     if(this.props.distinctRows){
       mergedRows = this.props.distinctRows(mergedRows);
     }
-    
+
     this._updateRows(mergedRows, options);
   },
 
@@ -330,6 +331,7 @@ var GiftedListView = React.createClass({
         {...this.props}
 
         style={this.props.style}
+        contentContainerStyle={this.props.contentContainerStyle}
       />
     );
   },
