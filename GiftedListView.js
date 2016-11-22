@@ -326,6 +326,7 @@ var GiftedListView = React.createClass({
         scrollEnabled={this.props.scrollEnabled}
         canCancelContentTouches={true}
         refreshControl={this.props.refreshable === true ? this.renderRefreshControl() : null}
+		enableEmptySections={true}
 
         {...this.props}
 
