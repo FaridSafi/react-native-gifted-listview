@@ -9,6 +9,7 @@ var {
   View,
   Text,
   RefreshControl,
+  ActivityIndicator,
 } = require('react-native');
 
 
@@ -27,8 +28,6 @@ function MergeRecursive(obj1, obj2) {
   }
   return obj1;
 }
-
-var GiftedSpinner = require('react-native-gifted-spinner');
 
 var GiftedListView = React.createClass({
 
@@ -102,7 +101,7 @@ var GiftedListView = React.createClass({
 
     return (
       <View style={[this.defaultStyles.paginationView, this.props.customStyles.paginationView]}>
-        <GiftedSpinner />
+        <ActivityIndicator />
       </View>
     );
   },
@@ -252,7 +251,7 @@ var GiftedListView = React.createClass({
     if(this.props.distinctRows){
       mergedRows = this.props.distinctRows(mergedRows);
     }
-    
+
     this._updateRows(mergedRows, options);
   },
 
