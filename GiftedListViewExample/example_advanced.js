@@ -222,7 +222,7 @@ var Example = React.createClass({
           firstLoader={true} // display a loader for the first fetching
 
           pagination={true} // enable infinite scrolling using touch to load more
-          paginationFetchigView={this._renderPaginationFetchigView}
+          paginationFetchingView={this._renderPaginationFetchigView}
           paginationAllLoadedView={this._renderPaginationAllLoadedView}
           paginationWaitingView={this._renderPaginationWaitingView}
 
