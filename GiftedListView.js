@@ -14,16 +14,12 @@ var {
 
 
 // small helper function which merged two objects into one
-function MergeRecursive(obj1, obj2) {
-  for (var p in obj2) {
-    try {
-      if ( obj2[p].constructor==Object ) {
-        obj1[p] = MergeRecursive(obj1[p], obj2[p]);
-      } else {
-        obj1[p] = obj2[p];
-      }
-    } catch(e) {
-      obj1[p] = obj2[p];
+function MergeRowsWithHeaders(obj1, obj2) {
+  for(var p in obj2){
+    if(obj1[p] instanceof Array && obj1[p] instanceof Array){
+      obj1[p] = obj1[p].concat(obj2[p])
+    } else {
+      obj1[p] = obj2[p]
     }
   }
   return obj1;
@@ -249,7 +245,7 @@ var GiftedListView = React.createClass({
     this._setPage(this._getPage() + 1);
     var mergedRows = null;
     if (this.props.withSections === true) {
-      mergedRows = MergeRecursive(this._getRows(), rows);
+      mergedRows = MergeRowsWithHeaders(this._getRows(), rows);
     } else {
       mergedRows = this._getRows().concat(rows);
     }
