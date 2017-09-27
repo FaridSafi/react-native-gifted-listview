@@ -49,6 +49,7 @@ var GiftedListView = React.createClass({
       paginationFetchingView: null,
       paginationAllLoadedView: null,
       paginationWaitingView: null,
+      paginationErrorView: null,
       emptyView: null,
       renderSeparator: null,
       rowHasChanged:null,
@@ -77,6 +78,7 @@ var GiftedListView = React.createClass({
     paginationFetchingView: React.PropTypes.func,
     paginationAllLoadedView: React.PropTypes.func,
     paginationWaitingView: React.PropTypes.func,
+    paginationErrorView: React.PropTypes.func,
     emptyView: React.PropTypes.func,
     renderSeparator: React.PropTypes.func,
 
@@ -111,6 +113,23 @@ var GiftedListView = React.createClass({
         <Text style={[this.defaultStyles.actionsLabel, this.props.customStyles.actionsLabel]}>
           ~
         </Text>
+      </View>
+    );
+  },
+
+  paginationErrorView(errorCallback) {
+    if (this.props.paginationErrorView) {
+      return this.props.paginationErrorView(errorCallback);
+    }
+    return (
+      <View style={[this.defaultStyles.paginationView, this.props.customStyles.paginationView]}>
+        <TouchableHighlight onPress={errorCallback}>
+            <View>
+                <Text style={[this.defaultStyles.actionsLabel, this.props.customStyles.actionsLabel]}>
+                    Tap to retry
+                </Text>
+            </View>
+        </TouchableHighlight>
       </View>
     );
   },
@@ -237,12 +256,23 @@ var GiftedListView = React.createClass({
       this.setState({
         paginationStatus: 'fetching',
       });
-      this.props.onFetch(this._getPage() + 1, this._postPaginate, {});
+      this._setPage(this._getPage() + 1);
+      this.props.onFetch(this._getPage(), this._postPaginate, {});
+    }
+  },
+
+  _onRetry() {
+    if(this.state.paginationStatus==='allLoaded'){
+      return null
+    }else {
+      this.setState({
+        paginationStatus: 'fetching',
+      });
+      this.props.onFetch(this._getPage(), this._postPaginate, {});
     }
   },
 
   _postPaginate(rows = [], options = {}) {
-    this._setPage(this._getPage() + 1);
     var mergedRows = null;
     if (this.props.withSections === true) {
       mergedRows = MergeRowsWithHeaders(this._getRows(), rows);
@@ -260,23 +290,29 @@ var GiftedListView = React.createClass({
   _updateRows(rows = [], options = {}) {
     if (rows !== null) {
       this._setRows(rows);
+      let paginationStatus = "waiting";
+      if(options.allLoaded){
+          paginationStatus = "allLoaded";
+      }else if(options.isError){
+          paginationStatus = "error";
+      }
       if (this.props.withSections === true) {
         this.setState({
           dataSource: this.state.dataSource.cloneWithRowsAndSections(rows),
           isRefreshing: false,
-          paginationStatus: (options.allLoaded === true ? 'allLoaded' : 'waiting'),
+          paginationStatus,
         });
       } else {
         this.setState({
           dataSource: this.state.dataSource.cloneWithRows(rows),
           isRefreshing: false,
-          paginationStatus: (options.allLoaded === true ? 'allLoaded' : 'waiting'),
+          paginationStatus,
         });
       }
     } else {
       this.setState({
         isRefreshing: false,
-        paginationStatus: (options.allLoaded === true ? 'allLoaded' : 'waiting'),
+        paginationStatus,
       });
     }
   },
@@ -288,6 +324,8 @@ var GiftedListView = React.createClass({
       return this.paginationWaitingView(this._onPaginate);
     } else if (this.state.paginationStatus === 'allLoaded' && this.props.pagination === true) {
       return this.paginationAllLoadedView();
+  } else if (this.state.paginationStatus === 'error' && this.props.pagination === true) {
+      return this.paginationErrorView(this._onRetry);
     } else if (this._getRows().length === 0) {
       return this.emptyView(this._onRefresh);
     } else {
