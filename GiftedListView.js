@@ -211,6 +211,11 @@ var GiftedListView = React.createClass({
     
     this.props.onFetch(this._getPage(), this._postRefresh, {firstLoad: true});
   },
+  //state change refresh
+  componentWillReceiveProps(){
+		this._setPage(1);
+   	this.props.onFetch(this._getPage(), this._postRefresh, {firstLoad:true});
+ 	},
 
   componentWillUnmount() {
     this._mounted = false;
