@@ -154,7 +154,7 @@ var Example = React.createClass({
   /**
    * Render the pagination view when fetching
    */
-  _renderPaginationFetchigView() {
+  _renderPaginationFetchingView() {
     return (
       <View style={customStyles.paginationView}>
         <GiftedSpinner />
@@ -222,7 +222,7 @@ var Example = React.createClass({
           firstLoader={true} // display a loader for the first fetching
 
           pagination={true} // enable infinite scrolling using touch to load more
-          paginationFetchigView={this._renderPaginationFetchigView}
+          paginationFetchigView={this._renderPaginationFetchingView}
           paginationAllLoadedView={this._renderPaginationAllLoadedView}
           paginationWaitingView={this._renderPaginationWaitingView}
 
