@@ -25,7 +25,7 @@ function MergeRowsWithHeaders(obj1, obj2) {
   return obj1;
 }
 
-var GiftedListView = React.createClass({
+export default class GiftedListView extends React.Component {
 
   getDefaultProps() {
     return {
@@ -58,7 +58,7 @@ var GiftedListView = React.createClass({
       spinnerSize: 'small',
       spinnerColor: 'gray',
     };
-  },
+  }
 
   propTypes: {
     customStyles: React.PropTypes.object,
@@ -90,12 +90,12 @@ var GiftedListView = React.createClass({
 
     spinnerSize: React.PropTypes.string,
     spinnerColor: React.PropTypes.string,
-  },
+  }
 
-  _setPage(page) { this._page = page; },
-  _getPage() { return this._page; },
-  _setRows(rows) { this._rows = rows; },
-  _getRows() { return this._rows; },
+  _setPage(page) { this._page = page; }
+  _getPage() { return this._page; }
+  _setRows(rows) { this._rows = rows; }
+  _getRows() { return this._rows; }
 
 
   paginationFetchingView() {
@@ -112,7 +112,7 @@ var GiftedListView = React.createClass({
         />
       </View>
     );
-  },
+  }
   paginationAllLoadedView() {
     if (this.props.paginationAllLoadedView) {
       return this.props.paginationAllLoadedView();
@@ -125,7 +125,7 @@ var GiftedListView = React.createClass({
         </Text>
       </View>
     );
-  },
+  }
   paginationWaitingView(paginateCallback) {
     if (this.props.paginationWaitingView) {
       return this.props.paginationWaitingView(paginateCallback);
@@ -142,13 +142,13 @@ var GiftedListView = React.createClass({
         </Text>
       </TouchableHighlight>
     );
-  },
+  }
   headerView() {
     if (this.state.paginationStatus === 'firstLoad' || !this.props.headerView){
       return null;
     }
     return this.props.headerView();
-  },
+  }
   emptyView(refreshCallback) {
     if (this.props.emptyView) {
       return this.props.emptyView(refreshCallback);
@@ -170,7 +170,7 @@ var GiftedListView = React.createClass({
         </TouchableHighlight>
       </View>
     );
-  },
+  }
   renderSeparator() {
     if (this.props.renderSeparator) {
       return this.props.renderSeparator();
@@ -179,7 +179,7 @@ var GiftedListView = React.createClass({
     return (
       <View style={[this.defaultStyles.separator, this.props.customStyles.separator]} />
     );
-  },
+  }
 
   getInitialState() {
     this._setPage(1);
@@ -206,37 +206,37 @@ var GiftedListView = React.createClass({
         paginationStatus: 'firstLoad',
       };
     }
-  },
+  }
 
   componentDidMount() {
     this._mounted = true;
-    
+
     this.props.onFetch(this._getPage(), this._postRefresh, {firstLoad: true});
-  },
+  }
   //state change refresh
   componentWillReceiveProps(){
-		this._setPage(1);
-   	this.props.onFetch(this._getPage(), this._postRefresh, {firstLoad:true});
- 	},
+    this._setPage(1);
+    this.props.onFetch(this._getPage(), this._postRefresh, {firstLoad:true});
+  }
 
   componentWillUnmount() {
     this._mounted = false;
-  },
+  }
 
   componentWillReceiveProps(nextProps) {
     if (nextProps.forceUpdate){
       this._setPage(1);
       this.props.onFetch(this._getPage(), this._postRefresh, {});
     }
-  },
+  }
 
   setNativeProps(props) {
     this.refs.listview.setNativeProps(props);
-  },
+  }
 
   _refresh() {
     this._onRefresh({external: true});
-  },
+  }
 
   _onRefresh(options = {}) {
     if (this._mounted) {
@@ -246,13 +246,13 @@ var GiftedListView = React.createClass({
       this._setPage(1);
       this.props.onFetch(this._getPage(), this._postRefresh, options);
     }
-  },
+  }
 
   _postRefresh(rows = [], options = {}) {
     if (this._mounted) {
       this._updateRows(rows, options);
     }
-  },
+  }
 
   _onPaginate() {
     if(this.state.paginationStatus==='allLoaded'){
@@ -263,7 +263,7 @@ var GiftedListView = React.createClass({
       });
       this.props.onFetch(this._getPage() + 1, this._postPaginate, {});
     }
-  },
+  }
 
   _postPaginate(rows = [], options = {}) {
     this._setPage(this._getPage() + 1);
@@ -279,7 +279,7 @@ var GiftedListView = React.createClass({
     }
 
     this._updateRows(mergedRows, options);
-  },
+  }
 
   _updateRows(rows = [], options = {}) {
     if (rows !== null) {
@@ -303,7 +303,7 @@ var GiftedListView = React.createClass({
         paginationStatus: (options.allLoaded === true ? 'allLoaded' : 'waiting'),
       });
     }
-  },
+  }
 
   _renderPaginationView() {
     if ((this.state.paginationStatus === 'fetching' && this.props.pagination === true) || (this.state.paginationStatus === 'firstLoad' && this.props.firstLoader === true)) {
@@ -317,7 +317,7 @@ var GiftedListView = React.createClass({
     } else {
       return null;
     }
-  },
+  }
 
   renderRefreshControl() {
     if (this.props.renderRefreshControl) {
@@ -334,7 +334,7 @@ var GiftedListView = React.createClass({
         title={this.props.refreshableTitle}
       />
     );
-  },
+  }
 
   render() {
     return (
@@ -357,7 +357,7 @@ var GiftedListView = React.createClass({
         style={this.props.style}
       />
     );
-  },
+  }
 
   defaultStyles: {
     separator: {
@@ -383,8 +383,5 @@ var GiftedListView = React.createClass({
       fontWeight: 'bold',
       marginBottom: 15,
     },
-  },
-});
-
-
-module.exports = GiftedListView;
+  }
+}
